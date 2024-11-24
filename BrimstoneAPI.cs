@@ -3,41 +3,11 @@ using Quintessential;
 
 namespace Brimstone;
 
-using Song = class_186;
-
-internal static class BrimstoneAPI
+public static class BrimstoneAPI
 {
-	public static Dictionary<string, Song> songDictionary;
-	public static Dictionary<string, Sound> fanfareDictionary;
 
 	private static readonly Dictionary<string, ModMeta> modMetaDictionary = new();
 	private static readonly Dictionary<string, Campaign> modCampaignDictionary = new();
-
-	public static void Load()
-	{
-        songDictionary.Add("Map", class_238.field_1992.field_968);
-        songDictionary.Add("Solitaire", class_238.field_1992.field_969);
-        songDictionary.Add("Solving1", class_238.field_1992.field_970);
-        songDictionary.Add("Solving2", class_238.field_1992.field_971);
-        songDictionary.Add("Solving3", class_238.field_1992.field_972);
-        songDictionary.Add("Solving4", class_238.field_1992.field_973);
-        songDictionary.Add("Solving5", class_238.field_1992.field_974);
-        songDictionary.Add("Solving6", class_238.field_1992.field_975);
-        songDictionary.Add("Story1", class_238.field_1992.field_976);
-        songDictionary.Add("Story2", class_238.field_1992.field_977);
-        songDictionary.Add("Title", class_238.field_1992.field_978);
-        fanfareDictionary.Add("Map", class_238.field_1991.field_1832);
-        fanfareDictionary.Add("Solitaire", class_238.field_1991.field_1832);
-        fanfareDictionary.Add("Solving1", class_238.field_1991.field_1830);
-        fanfareDictionary.Add("Solving2", class_238.field_1991.field_1831);
-        fanfareDictionary.Add("Solving3", class_238.field_1991.field_1832);
-        fanfareDictionary.Add("Solving4", class_238.field_1991.field_1833);
-        fanfareDictionary.Add("Solving5", class_238.field_1991.field_1834);
-        fanfareDictionary.Add("Solving6", class_238.field_1991.field_1835);
-        fanfareDictionary.Add("Story1", class_238.field_1991.field_1832);
-        fanfareDictionary.Add("Story2", class_238.field_1991.field_1832);
-        fanfareDictionary.Add("Title", class_238.field_1991.field_1832);
-    }
 
 	// Create a promotable metal element
 	public static AtomType CreateMetal(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, AtomType promotesTo = null)
