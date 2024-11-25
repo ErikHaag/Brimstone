@@ -7,7 +7,9 @@ internal class Brimstone : QuintessentialMod
     
     override public void Load()
     {
-        Quintessential.Logger.Log("Brimstone Active");
+        Quintessential.Logger.Log("Brimstone: Loading!");
+        BrimstoneAPI.LoadSongAndFanfareDictionary();
+        Quintessential.Logger.Log("Brimestone: Loaded!");
     }
 
     public override void PostLoad()
@@ -17,7 +19,7 @@ internal class Brimstone : QuintessentialMod
 
     public override void LoadPuzzleContent()
     {
-
+        
     }
 
     public override void Unload()
