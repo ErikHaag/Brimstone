@@ -171,19 +171,19 @@ public static partial class BrimstoneAPI
 
 	private static Dictionary<string, AdvancedContentModel> AdvancedContentDictionary = new();
 
-	// A D V A N C E content
+	// A D V A N C E D content
 	public static AdvancedContentModel GetAdvancedContentModel(ModMeta modMeta)
 	{
 		if (AdvancedContentDictionary.TryGetValue(modMeta.Name, out	AdvancedContentModel acm))
 		{
 			return acm;
 		}
-        acm = YamlHelper.Deserializer.Deserialize<AdvancedContentModel>(new StreamReader(modMeta.PathDirectory + "/Puzzles/" + modMeta.Name + ".advance.yaml"));
+        acm = YamlHelper.Deserializer.Deserialize<AdvancedContentModel>(new StreamReader(modMeta.PathDirectory + "/Puzzles/" + modMeta.Name + ".advanced.yaml"));
 		AdvancedContentDictionary.Add(modMeta.Name, acm);
 		return acm;
     }
 
-	public static void RemoveAdvanceContentModel(ModMeta modMeta)
+	public static void RemoveAdvancedContentModel(ModMeta modMeta)
 	{
 		AdvancedContentDictionary.Remove(modMeta.Name);
 	}
