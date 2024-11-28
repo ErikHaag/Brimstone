@@ -39,30 +39,48 @@ public static partial class BrimstoneAPI
 		public List<CutsceneModel> Cutscenes;
 		public List<DocumentModel> Documents;
 		public List<PuzzleModel> Puzzles;
+		public string name;
 
 		public void ModifyCampaignItem(CampaignItem campaignItem)
 		{
 			if (!campaignItem.field_2325.method_1085()) return;
 			string puzzleID = campaignItem.field_2325.method_1087().field_2766;
-
-			foreach (var cutsceneM in this.Cutscenes.Where(x => x.ID == puzzleID))
+			if (this.Cutscenes is not null)
 			{
-				cutsceneM.ModifyCampaignItem(campaignItem);
-				return;
-			}
-
-			foreach (var documentM in this.Documents.Where(x => x.ID == puzzleID))
+				foreach (var cutsceneM in this.Cutscenes.Where(x => x.ID == puzzleID))
+				{
+					cutsceneM.ModifyCampaignItem(campaignItem);
+					return;
+				}
+			} else
 			{
-				documentM.ModifyCampaignItem(campaignItem);
-				return;
+				Quintessential.Logger.Log("Brimestone: " + this.name + " has no cutscenes.");
 			}
-
-			foreach (var puzzleM in this.Puzzles.Where(x => x.ID == puzzleID))
+			if (this.Documents is not null)
 			{
-				puzzleM.ModifyCampaignItem(campaignItem);
-				return;
-			}
-		}
+                foreach (var documentM in this.Documents.Where(x => x.ID == puzzleID))
+                {
+                    documentM.ModifyCampaignItem(campaignItem);
+                    return;
+                }
+            }
+            else
+            {
+                Quintessential.Logger.Log("Brimestone: " + this.name + " has no documents.");
+            }
+            if (this.Puzzles is not null)
+			{
+                foreach (var puzzleM in this.Puzzles.Where(x => x.ID == puzzleID))
+                {
+                    puzzleM.ModifyCampaignItem(campaignItem);
+                    return;
+                }
+            }
+            else
+            {
+                Quintessential.Logger.Log("Brimestone: " + this.name + " has no puzzles.");
+            }
+        }
 	}
 
 	public class CreditsModel

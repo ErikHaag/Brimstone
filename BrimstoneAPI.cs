@@ -179,6 +179,7 @@ public static partial class BrimstoneAPI
 			return acm;
 		}
         acm = YamlHelper.Deserializer.Deserialize<AdvancedContentModel>(new StreamReader(modMeta.PathDirectory + "/Puzzles/" + modMeta.Name + ".advanced.yaml"));
+		acm.name = modMeta.Name;
 		AdvancedContentDictionary.Add(modMeta.Name, acm);
 		return acm;
     }
