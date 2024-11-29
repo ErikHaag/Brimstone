@@ -9,6 +9,7 @@ internal class Brimstone : QuintessentialMod
     {
         Quintessential.Logger.Log("Brimstone: Loading!");
         BrimstoneAPI.LoadSongAndFanfareDictionary();
+        BrimstoneAPI.Document.Load();
         Quintessential.Logger.Log("Brimestone: Loaded!");
     }
 
