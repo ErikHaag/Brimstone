@@ -30,7 +30,7 @@ public static partial class BrimstoneAPI
 			field_2294 = true,
 			QuintAtomType = modName + ":" + name.ToLower()
 		};
-		if (promotesTo is not null) {
+		if (promotesTo != null) {
 			atom.field_2297 = Maybe<AtomType>.method_1089(promotesTo);
 		}
 		return atom;
