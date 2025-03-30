@@ -7,9 +7,6 @@ internal class Brimstone : QuintessentialMod
     
     override public void Load()
     {
-        Quintessential.Logger.Log("Brimstone: Loading!");
-        BrimstoneAPI.LoadSongAndFanfareDictionary();
-        BrimstoneAPI.Document.Load();
         Quintessential.Logger.Log("Brimestone: Loaded!");
     }
 
