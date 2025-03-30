@@ -33,4 +33,20 @@ public static partial class BrimstoneAPI
 		}
 		return atom;
 	}
+
+	
+	/* Simulation Utils */
+
+    public static void ChangeAtom(AtomReference atom, AtomType newType)
+    {
+        // A sudden change of type, that's what animation is meant to cover up.
+        atom.field_2277.method_1106(newType, atom.field_2278);
+    }
+
+    public static void RemoveAtom(AtomReference atom)
+	{
+		// Poof!
+		atom.field_2277.method_1107(atom.field_2278);
+	}
+
 }
