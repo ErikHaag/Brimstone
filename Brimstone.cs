@@ -7,7 +7,7 @@ internal class Brimstone : QuintessentialMod
     
     override public void Load()
     {
-        Quintessential.Logger.Log("Brimestone: Loaded!");
+        Quintessential.Logger.Log("Brimstone: Loaded!");
     }
 
     public override void PostLoad()
