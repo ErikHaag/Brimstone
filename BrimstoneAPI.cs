@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using Quintessential;
 
 namespace Brimstone;
 public static class BrimstoneAPI
 {
+    /* AtomType utils */
+
     // Create a nonmetal atom type
     public const byte CARDINAL = 1;
     public const byte QUICKSILVER = 2;
@@ -61,18 +67,53 @@ public static class BrimstoneAPI
         return atom;
     }
 
+    /* File Utils */
+
+    public static class_256 GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
+
+    public static string GetContentPath(string modName)
+    {
+        foreach (string dir in QuintessentialLoader.ModContentDirectories)
+        {
+            Quintessential.Logger.Log(dir);
+            int lastCharIndex = dir.Length - 1;
+            // Assumes you don't use letters in version string
+            while ("_1234567890.".Contains(dir[lastCharIndex]))
+            {
+                lastCharIndex--;
+            }
+            if (!dir.Substring(0, lastCharIndex + 1).EndsWith(modName))
+            {
+                continue;
+            }
+            return Path.Combine(dir, "Content/");
+        }
+        return null;
+    }
+    public static Sound GetSound(string contentDir, string path)
+    {
+        string soundPath = Path.Combine(contentDir, path + ".wav");
+        if (!File.Exists(soundPath))
+        {
+            return null;
+        }
+        Sound sound = new()
+        {
+            field_4060 = Path.GetFileNameWithoutExtension(soundPath),
+            field_4061 = class_158.method_375(soundPath)
+        };
+        return sound;
+    }
+
+    /* Misc. */
+
+    public static MethodInfo PrivateMethod<T>(string method) => typeof(T).GetMethod(method, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
     /* Simulation Utils */
 
-    public static void ChangeAtom(AtomReference atom, AtomType newType)
-    {
-        // A sudden change of type, that's what animation is meant to cover up.
-        atom.field_2277.method_1106(newType, atom.field_2278);
-    }
+    public static void ChangeAtom(AtomReference atom, AtomType newType) => atom.field_2277.method_1106(newType, atom.field_2278);
 
-    public static void RemoveAtom(AtomReference atom)
-    {
-        // Poof!
-        atom.field_2277.method_1107(atom.field_2278);
-    }
+    public static void RemoveAtom(AtomReference atom) => atom.field_2277.method_1107(atom.field_2278);
 
+    public static void PlaySound(Sim sim, Sound sound) => BrimstoneAPI.PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
 }

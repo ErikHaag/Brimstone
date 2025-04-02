@@ -17,7 +17,7 @@ internal class Brimstone : QuintessentialMod
 
     public override void LoadPuzzleContent()
     {
-        
+        Quintessential.Logger.Log(BrimstoneAPI.GetContentPath("Brimstone"));
     }
 
     public override void Unload()
