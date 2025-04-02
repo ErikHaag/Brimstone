@@ -14,10 +14,15 @@ public static class BrimstoneAPI
     /* AtomType utils */
 
     // Create a nonmetal atom type
-    public const byte CARDINAL = 1;
-    public const byte QUICKSILVER = 2;
-    public const byte QUINTESSENCE = 4;
-    public static AtomType CreateAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShade = "textures/atoms/salt_shade", byte flags = 0)
+    [Flags]
+    public enum AtomBehavior
+    {
+        None = 0,
+        Cardinal = 1,
+        Quicksilver = 2,
+        Quintessense = 4
+    }
+    public static AtomType CreateAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShade = "textures/atoms/salt_shade", AtomBehavior atomBehavior = AtomBehavior.None)
     {
         AtomType atom = new()
         {
@@ -32,9 +37,9 @@ public static class BrimstoneAPI
                 field_994 = class_235.method_615(pathToDiffuse),
                 field_995 = class_235.method_615(pathToShade),
             },
-            field_2293 = (flags & CARDINAL) != 0,
-            field_2295 = (flags & QUICKSILVER) != 0,
-            field_2296 = (flags & QUINTESSENCE) != 0,
+            field_2293 = (atomBehavior & AtomBehavior.Cardinal) == AtomBehavior.Cardinal,
+            field_2295 = (atomBehavior & AtomBehavior.Quicksilver) == AtomBehavior.Quicksilver,
+            field_2296 = (atomBehavior & AtomBehavior.Quintessense) == AtomBehavior.Quintessense,
             QuintAtomType = modName + ":" + name.ToLower()
         };
         return atom;
