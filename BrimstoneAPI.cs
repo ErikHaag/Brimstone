@@ -98,7 +98,6 @@ public static class BrimstoneAPI
     {
         foreach (string dir in QuintessentialLoader.ModContentDirectories)
         {
-            Quintessential.Logger.Log(dir);
             int lastCharIndex = dir.Length - 1;
             // Assumes you don't use letters in version string
             while ("_1234567890.".Contains(dir[lastCharIndex]))
