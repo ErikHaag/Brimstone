@@ -13,6 +13,24 @@ public static class BrimstoneAPI
 {
     /* AtomType utils */
 
+    public static readonly Dictionary<string, AtomType> VanillaAtoms = new() {
+        { "salt", class_175.field_1675 },
+        { "air",  class_175.field_1676 },
+        { "fire", class_175.field_1678 },
+        { "quicksilver", class_175.field_1680 },
+        { "water", class_175.field_1679 },
+        { "earth", class_175.field_1677 },
+        { "lead", class_175.field_1681 },
+        { "tin", class_175.field_1683 },
+        { "iron", class_175.field_1684 },
+        { "copper", class_175.field_1682 },
+        { "silver", class_175.field_1685 },
+        { "gold", class_175.field_1686 },
+        { "vitae", class_175.field_1687 },
+        { "mors", class_175.field_1688 },
+        { "quintessence", class_175.field_1690 }
+    };
+
     // Create a nonmetal atom type
     [Flags]
     public enum AtomBehavior
