@@ -94,6 +94,18 @@ public static class BrimstoneAPI
 
     public static class_256 GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
 
+    public static QuintessentialMod GetMod(string modName)
+    {
+        foreach (QuintessentialMod mod in QuintessentialLoader.CodeMods)
+        {
+            if (mod.Meta.Name == modName)
+            {
+                return mod;
+            }
+        }
+        return null;
+    }
+
     public static string GetContentPath(string modName)
     {
         foreach (string dir in QuintessentialLoader.ModContentDirectories)
