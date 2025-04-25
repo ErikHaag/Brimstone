@@ -107,7 +107,7 @@ public static class API
 
     public static readonly string[] directionNames = { "left", "right", "bottom", "top" };
 
-    public static class_126 GetLighting(string path = "textures/atoms/atom.lighting") => new class_126(GetTexture(Path.Combine(path, directionNames[0] + ".png")), GetTexture(Path.Combine(path, directionNames[1] + ".png")), GetTexture(Path.Combine(path, directionNames[2] + ".png")), GetTexture(Path.Combine(path, directionNames[3] + ".png")));
+    public static class_126 GetLighting(string path = "textures/atoms/atom.lighting") => new class_126(GetTexture(Path.Combine(path, directionNames[0])), GetTexture(Path.Combine(path, directionNames[1])), GetTexture(Path.Combine(path, directionNames[2])), GetTexture(Path.Combine(path, directionNames[3])));
 
     public static QuintessentialMod GetMod(string modName)
     {
