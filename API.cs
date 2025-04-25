@@ -6,10 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Quintessential;
 
 namespace Brimstone;
-public static class BrimstoneAPI
+
+using Texture = class_256;
+public static class API
 {
     /* AtomType utils */
 
@@ -31,40 +34,7 @@ public static class BrimstoneAPI
         { "quintessence", class_175.field_1690 }
     };
 
-    // Create a nonmetal atom type
-    [Flags]
-    public enum AtomBehavior
-    {
-        None = 0,
-        Cardinal = 1,
-        Quicksilver = 2,
-        Quintessense = 4
-    }
-    public static AtomType CreateAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShade = "textures/atoms/salt_shade", AtomBehavior atomBehavior = AtomBehavior.None)
-    {
-        AtomType atom = new()
-        {
-            field_2283 = ID,
-            field_2284 = class_134.method_254(name), // Non local name
-            field_2285 = class_134.method_253("Elemental " + name, String.Empty), // Atomic name
-            field_2286 = class_134.method_253(name, String.Empty), // Local name
-            field_2287 = class_235.method_615(pathToSymbol), // Symbol
-            field_2288 = class_235.method_615("textures/atoms/shadow"),
-            field_2290 = new()
-            {
-                field_994 = class_235.method_615(pathToDiffuse),
-                field_995 = class_235.method_615(pathToShade),
-            },
-            field_2293 = (atomBehavior & AtomBehavior.Cardinal) == AtomBehavior.Cardinal,
-            field_2295 = (atomBehavior & AtomBehavior.Quicksilver) == AtomBehavior.Quicksilver,
-            field_2296 = (atomBehavior & AtomBehavior.Quintessense) == AtomBehavior.Quintessense,
-            QuintAtomType = modName + ":" + name.ToLower()
-        };
-        return atom;
-    }
-
-    // Create a promotable metal element
-    public static AtomType CreateMetal(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, AtomType promotesTo = null)
+    public static AtomType CreateCardinalAtom(byte ID, string modName, string name, string pathToBase, string pathToFog, string pathToRim, string pathToSymbol, string pathToShadow)
     {
         AtomType atom = new()
         {
@@ -73,14 +43,37 @@ public static class BrimstoneAPI
             field_2285 = class_134.method_253("Elemental " + name, string.Empty), // Atomic name
             field_2286 = class_134.method_253(name, string.Empty), // Local name
             field_2287 = class_235.method_615(pathToSymbol), // Symbol
-            field_2288 = class_235.method_615("textures/atoms/shadow"), // Shadow
+            field_2288 = class_235.method_615(pathToShadow), // Shadow
+            field_2289 = new()
+            {
+                field_8 = class_235.method_615(pathToBase),
+                field_9 = class_235.method_615(pathToFog),
+                field_10 = class_235.method_615(pathToRim)
+            },
+            field_2293 = true, // Cardinal
+            QuintAtomType = modName + ":" + name.ToLower(),
+        };
+        return atom;
+    }
+
+    // Create a promotable metal element
+    public static AtomType CreateMetalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, string pathToShadow = "textures/atoms/shadow", AtomType promotesTo = null)
+    {
+        AtomType atom = new()
+        {
+            field_2283 = ID,
+            field_2284 = class_134.method_254(name), // Non local name
+            field_2285 = class_134.method_253("Elemental " + name, string.Empty), // Atomic name
+            field_2286 = class_134.method_253(name, string.Empty), // Local name
+            field_2287 = class_235.method_615(pathToSymbol), // Symbol
+            field_2288 = class_235.method_615(pathToShadow), // Shadow
             field_2291 = new()
             {
                 field_13 = class_238.field_1989.field_81.field_577, // Diffuse
-                field_14 = class_235.method_615(pathToLightramp),
-                field_15 = class_238.field_1989.field_81.field_613.field_633 // Shiny
+                field_14 = class_235.method_615(pathToLightramp), 
+                field_15 = class_238.field_1989.field_81.field_613.field_634
             },
-            field_2294 = true,
+            field_2294 = true, // Metal
             QuintAtomType = modName + ":" + name.ToLower()
         };
         if (promotesTo is not null)
@@ -90,9 +83,30 @@ public static class BrimstoneAPI
         return atom;
     }
 
+    // Create a nonmetal atom type
+    public static AtomType CreateNormalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShadow = "texture/atoms/shadow", string pathToShade = "textures/atoms/salt_shade")
+    {
+        AtomType atom = new()
+        {
+            field_2283 = ID,
+            field_2284 = class_134.method_254(name), // Non local name
+            field_2285 = class_134.method_253("Elemental " + name, String.Empty), // Atomic name
+            field_2286 = class_134.method_253(name, String.Empty), // Local name
+            field_2287 = class_235.method_615(pathToSymbol),
+            field_2288 = class_235.method_615(pathToShadow),
+            field_2290 = new()
+            {
+                field_994 = class_235.method_615(pathToDiffuse),
+                field_995 = class_235.method_615(pathToShade),
+            },
+            QuintAtomType = modName + ":" + name.ToLower()
+        };
+        return atom;
+    }
+
     /* File Utils */
 
-    public static class_256 GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
+    public static Texture GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
 
     public static QuintessentialMod GetMod(string modName)
     {
@@ -152,5 +166,5 @@ public static class BrimstoneAPI
 
     public static void RemoveAtom(AtomReference atom) => atom.field_2277.method_1107(atom.field_2278);
 
-    public static void PlaySound(Sim sim, Sound sound) => BrimstoneAPI.PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
+    public static void PlaySound(Sim sim, Sound sound) => API.PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
 }
