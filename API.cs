@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using Quintessential;
 
 namespace Brimstone;
@@ -57,7 +53,7 @@ public static class API
     }
 
     // Create a promotable metal element
-    public static AtomType CreateMetalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, string pathToShadow = "textures/atoms/shadow", AtomType promotesTo = null)
+    public static AtomType CreateMetalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, string pathToShadow = "textures/atoms/shadow", class_126 lighting = null, AtomType promotesTo = null)
     {
         AtomType atom = new()
         {
@@ -71,7 +67,8 @@ public static class API
             {
                 field_13 = class_238.field_1989.field_81.field_577, // Diffuse
                 field_14 = class_235.method_615(pathToLightramp), 
-                field_15 = class_238.field_1989.field_81.field_613.field_634
+                field_15 = class_238.field_1989.field_81.field_613.field_634,
+                atomLighting = lighting
             },
             field_2294 = true, // Metal
             QuintAtomType = modName + ":" + name.ToLower()
@@ -107,6 +104,10 @@ public static class API
     /* File Utils */
 
     public static Texture GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
+
+    public static readonly string[] directionNames = { "left", "right", "bottom", "top" };
+
+    public static class_126 GetLighting(string path = "textures/atoms/atom.lighting") => new class_126(GetTexture(Path.Combine(path, directionNames[0] + ".png")), GetTexture(Path.Combine(path, directionNames[1] + ".png")), GetTexture(Path.Combine(path, directionNames[2] + ".png")), GetTexture(Path.Combine(path, directionNames[3] + ".png")));
 
     public static QuintessentialMod GetMod(string modName)
     {
