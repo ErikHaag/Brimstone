@@ -70,7 +70,7 @@ public static class API
             field_2291 = new()
             {
                 field_13 = class_238.field_1989.field_81.field_577, // Diffuse
-                field_14 = class_235.method_615(pathToLightramp), 
+                field_14 = class_235.method_615(pathToLightramp),
                 field_15 = class_238.field_1989.field_81.field_613.field_634
             },
             field_2294 = true, // Metal
@@ -106,18 +106,14 @@ public static class API
 
     /* File Utils */
 
-    public static Texture GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
-
-    public static QuintessentialMod GetMod(string modName)
+    public static class_256[] GetAnimation(string containingFolder, string frameBaseName, int frameCount, int padding = 4)
     {
-        foreach (QuintessentialMod mod in QuintessentialLoader.CodeMods)
+        class_256[] anim = new class_256[frameCount];
+        for (int i = 0; i < frameCount; i++)
         {
-            if (mod.Meta.Name == modName)
-            {
-                return mod;
-            }
+            anim[i] = API.GetTexture(Path.Combine(containingFolder, frameBaseName) + "_" + (i + 1).ToString().PadLeft(padding, '0'));
         }
-        return null;
+        return anim;
     }
 
     public static string GetContentPath(string modName)
@@ -138,6 +134,19 @@ public static class API
         }
         return null;
     }
+
+    public static QuintessentialMod GetMod(string modName)
+    {
+        foreach (QuintessentialMod mod in QuintessentialLoader.CodeMods)
+        {
+            if (mod.Meta.Name == modName)
+            {
+                return mod;
+            }
+        }
+        return null;
+    }
+
     public static Sound GetSound(string contentDir, string path)
     {
         string soundPath = Path.Combine(contentDir, path + ".wav");
@@ -152,6 +161,8 @@ public static class API
         };
         return sound;
     }
+
+    public static Texture GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
 
     /* Misc. */
 
