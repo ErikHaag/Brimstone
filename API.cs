@@ -168,6 +168,12 @@ public static class API
 
     public static MethodInfo PrivateMethod<T>(string method) => typeof(T).GetMethod(method, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
+    public static MethodInfo PrivateMethod(Type T, string method) => T.GetMethod(method, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+    public static FieldInfo PrivateField<T>(string field) => typeof(T).GetField(field, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+    public static FieldInfo PrivateField(Type T, string field) => T.GetField(field, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
     // Borrowed from Reductive Metallurgy
     public static bool IsModLoaded(string modName) => QuintessentialLoader.Mods.Any(mod => mod.Name == modName);
 
