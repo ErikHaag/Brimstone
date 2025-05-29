@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using MonoMod.Utils;
 using Quintessential;
 
 namespace Brimstone;
@@ -178,6 +179,24 @@ public static class API
     public static bool IsModLoaded(string modName) => QuintessentialLoader.Mods.Any(mod => mod.Name == modName);
 
     /* Simulation Utils */
+
+    public static void AddAtom(Sim sim, AtomType atomType, Part part, HexIndex hex)
+    {
+        Molecule molecule = new();
+        molecule.method_1105(new Atom(atomType), part.method_1184(hex));
+        sim.field_3823.Add(molecule);
+    }
+
+    // Borrowed from TrueAn
+    public static void AddSmallCollider(Sim sim, Part part, HexIndex hex)
+    {
+        sim.field_3826.Add(new()
+        {
+            field_3850 = (Sim.enum_190)0,
+            field_3851 = class_187.field_1742.method_492(part.method_1184(hex)),
+            field_3852 = 15f
+        });
+    }
 
     public static void ChangeAtom(AtomReference atom, AtomType newType) => atom.field_2277.method_1106(newType, atom.field_2278);
 
