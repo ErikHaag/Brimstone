@@ -375,7 +375,7 @@ public static class API
 
     /// <summary>
     /// Spawns a small atom collider, to represent the top of a proxy emerging from an iris.
-    /// See also: <see cref="AddAtom(Sim, Part, AtomType, HexIndex)"/>
+    /// See also: <see cref="AddAtom(Sim, Part, HexIndex, AtomType)"/>
     /// Borrowed from TrueAn.
     /// </summary>
     /// <param name="sim">The simulation object.</param>
@@ -536,7 +536,10 @@ public static class API
     public static SuccessInfo RemoveBonds(Sim sim, Molecule molecule, HexIndex h1, HexIndex h2, bool playAnimation = true, bool playSound = true)
     {
         List<class_277> moleculeBonds = (List<class_277>)API.PrivateField(molecule.GetType(), "field_2643").GetValue(molecule);
-        int count = (int)moleculeBonds.GetType().GetMethod("RemoveAll").Invoke(moleculeBonds, new object[] { bool (class_277 bond) => (bond.field_2187 == h1 && bond.field_2188 == h2) || (bond.field_2188 == h1 && bond.field_2187 == h2)});
+
+        Predicate<class_277> bondTest = bond => (bond.field_2187 == h1 && bond.field_2188 == h2) || (bond.field_2188 == h1 && bond.field_2187 == h2);
+
+        int count = (int)moleculeBonds.GetType().GetMethod("RemoveAll").Invoke(moleculeBonds, new object[] { bondTest });
         if (count == 0)
         {
             return SuccessInfo.idempotent;
@@ -596,13 +599,8 @@ public static class API
             return false;
         }
         List<class_277> moleculeBonds = (List<class_277>)API.PrivateField(molecule.GetType(), "field_2643").GetValue(molecule);
-        moleculeBonds.GetType().GetMethod("RemoveAll").Invoke(moleculeBonds, new object[] { bool (class_277 bond) => {
-            if (bond.field_2187 == hex)
-            {
-                return true;
-            }
-            return bond.field_2188 == hex;
-        }});
+        Predicate<class_277> bondTest = bond => bond.field_2187 == hex || bond.field_2188 == hex;
+        moleculeBonds.GetType().GetMethod("RemoveAll").Invoke(moleculeBonds, new object[] { bondTest });
         return true;
     }
 
