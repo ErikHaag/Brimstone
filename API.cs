@@ -1,22 +1,39 @@
-﻿using System;
+﻿using Quintessential;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using MonoMod.Utils;
-using Quintessential;
 
 namespace Brimstone;
 
+using BondType = enum_126;
 using Texture = class_256;
+
 public static class API
 {
-    /* AtomType utils */
+    #region helper classes & enum
 
+    /// <summary>
+    /// A three state enum, to communicate what happened
+    /// failure: command couldn't run to completion, due to invalid arguments, or conditions
+    /// idempotent: command could execute, but it didn't change anything
+    /// success: command fully executed, and caused a change.
+    /// </summary>
+    public enum SuccessInfo
+    {
+        failure = 0,
+        idempotent = 1,
+        success = 2
+    }
+
+    #endregion
+    #region AtomType utils
+
+    /// <summary>
+    /// A dictionary of vanilla atoms, excluding the repeat atom.
+    /// Keys are their english names in lowercase.
+    /// </summary>
     public static readonly Dictionary<string, AtomType> VanillaAtoms = new() {
         { "salt", class_175.field_1675 },
         { "air",  class_175.field_1676 },
@@ -35,6 +52,24 @@ public static class API
         { "quintessence", class_175.field_1690 }
     };
 
+    /// <summary>
+    /// Creates a cardinal atomtype, I recommend you use named parameters with this function.
+    /// </summary>
+    /// <param name="ID">A positive integer from 0 to 255, the values from 1 to 16 are already used by the game and shouldn't be used.
+    /// Please consult other mods that add atoms to avoid ID collisions.</param>
+    /// <param name="modName">The name of your mod.</param>
+    /// <param name="name">The name of the atom in uppercase.</param>
+    /// <param name="pathToBase">A file that leads to a texture of a proxy's bottom.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToFog">A file that leads to a texture of a proxy's center.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToRim">A file that leads to a texture of a proxy's rimlight.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToSymbol">A file that leads to a texture of a proxy's symbol
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToShadow">A file that leads to a texture of a proxy's shadow.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <returns>An AtomType that can be passed to Quintessential.</returns>
     public static AtomType CreateCardinalAtom(byte ID, string modName, string name, string pathToBase, string pathToFog, string pathToRim, string pathToSymbol, string pathToShadow)
     {
         AtomType atom = new()
@@ -57,7 +92,21 @@ public static class API
         return atom;
     }
 
-    // Create a promotable metal element
+    /// <summary>
+    /// Creates a metal atom, that has the option to be promoted, I recommend you to use named parameters with this function.
+    /// </summary>
+    /// <param name="ID">A positive integer from 0 to 255, the values from 1 to 16 are already used by the game and shouldn't be used.
+    /// Please consult other mods that add atoms to avoid ID collisions.</param>
+    /// <param name="modName">The name of your mod.</param>
+    /// <param name="name">The name of the atom in uppercase</param>
+    /// <param name="pathToSymbol">A file that leads to a texture of a proxy's symbol.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToLightramp">A file that leads to a texture of a proxy's lightramp.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToShadow">A file that leads to a texture of a proxy's shadow or rimlight.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="promotesTo">The metal above it in the promotion chain, used by the glyph of projection and purification.</param>
+    /// <returns>An AtomType that can be passed to Quintessential.</returns>
     public static AtomType CreateMetalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, string pathToShadow = "textures/atoms/shadow", AtomType promotesTo = null)
     {
         AtomType atom = new()
@@ -84,7 +133,22 @@ public static class API
         return atom;
     }
 
-    // Create a nonmetal atom type
+    /// <summary>
+    /// Creates a normal atom, I recommend you to use named parameters with this function.
+    /// </summary>
+    /// <param name="ID">A positive integer from 0 to 255, the values from 1 to 16 are already used by the game and shouldn't be used.
+    /// Please consult other mods that add atoms to avoid ID collisions.</param>
+    /// <param name="modName">The name of your mod.</param>
+    /// <param name="name">The name of the atom in uppercase.</param>
+    /// <param name="pathToSymbol">A file that leads to a texture of a proxy's symbol.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToDiffuse">A file that leads to a texture of a proxy' surface.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToShadow">A file that leads to a texture of a proxy's shadow.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToShade">A file that leads to a texture of a proxy's shade
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <returns>An AtomType that can be passed to Quintessential.</returns>
     public static AtomType CreateNormalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShadow = "texture/atoms/shadow", string pathToShade = "textures/atoms/salt_shade")
     {
         AtomType atom = new()
@@ -105,11 +169,22 @@ public static class API
         return atom;
     }
 
-    /* File Utils */
+    #endregion
+    #region File Utils
 
-    public static class_256[] GetAnimation(string containingFolder, string frameBaseName, int frameCount, int padding = 4)
+    /// <summary>
+    /// Packages a set of frames from a folder into an array, to then be played using another function.
+    /// </summary>
+    /// <param name="containingFolder">The folder that contains the frames, usually has a name ending with .array.
+    /// The root is your mod's content folder.</param>
+    /// <param name="frameBaseName">The name shared by each frame.
+    /// e.g. if your frames were "hello_0000.png", "hello_0001.png", "hello_0002.png" ... this would be "hello".</param>
+    /// <param name="frameCount">The number of frames present in this animation.</param>
+    /// <param name="padding">The number of digits each frame possesses, this so the frames are in a sensible order when sorted by name</param>
+    /// <returns>An array of textures representing your animation, missing frames are replaced with "oh no" texture.</returns>
+    public static Texture[] GetAnimation(string containingFolder, string frameBaseName, int frameCount, int padding = 4)
     {
-        class_256[] anim = new class_256[frameCount];
+        Texture[] anim = new Texture[frameCount];
         for (int i = 0; i < frameCount; i++)
         {
             anim[i] = API.GetTexture(Path.Combine(containingFolder, frameBaseName) + "_" + (i + 1).ToString().PadLeft(padding, '0'));
@@ -117,7 +192,12 @@ public static class API
         return anim;
     }
 
-    public static string GetContentPath(string modName)
+    /// <summary>
+    /// searches the mods directory for a folder whose name; excluding the version suffix, matches the argument, and gives the path to the content directory.
+    /// </summary>
+    /// <param name="modName">The name of folder that contains a quintessential.yaml file, the last section of digits, periods, and underscores in the folder name is ignored.</param>
+    /// <returns>An absolute path to the requested mod's content folder.</returns>
+    public static Maybe<string> GetContentPath(string modName)
     {
         foreach (string dir in QuintessentialLoader.ModContentDirectories)
         {
@@ -136,7 +216,12 @@ public static class API
         return null;
     }
 
-    public static QuintessentialMod GetMod(string modName)
+    /// <summary>
+    /// Searchs the loaded mods for one whose name matches the argument.
+    /// </summary>
+    /// <param name="modName">The name set in the mod's quintessential.yaml file to find.</param>
+    /// <returns>The mod of the desired name.</returns>
+    public static Maybe<QuintessentialMod> GetMod(string modName)
     {
         foreach (QuintessentialMod mod in QuintessentialLoader.CodeMods)
         {
@@ -148,7 +233,13 @@ public static class API
         return null;
     }
 
-    public static Sound GetSound(string contentDir, string path)
+    /// <summary>
+    /// Retrieves a .wav file for the game to play. Some extra post-processing is required to ensure the game won't crash when playing it.
+    /// </summary>
+    /// <param name="contentDir">The absolute path of your mod's content directory, use the return value of GetContentPath here.</param>
+    /// <param name="path">The path to the .wav file, do not include the file extension.</param>
+    /// <returns>A sound object that represents sound file.</returns>
+    public static Maybe<Sound> GetSound(string contentDir, string path)
     {
         string soundPath = Path.Combine(contentDir, path + ".wav");
         if (!File.Exists(soundPath))
@@ -163,44 +254,374 @@ public static class API
         return sound;
     }
 
+    /// <summary>
+    /// Retrieves a texture from a file.
+    /// </summary>
+    /// <param name="path">The path to the texture file, do not include the file extension.
+    /// The root is your mod's content folder.</param>
+    /// <returns>A texture object representing the file</returns>
     public static Texture GetTexture(string path = "Quintessential/missing") => class_235.method_615(path);
 
-    /* Misc. */
+    #endregion
+    #region Misc.
 
+    /// <summary>
+    /// Retrieves a method from <typeparamref name="T"/> that is not public.
+    /// </summary>
+    /// <typeparam name="T">The class of interest.</typeparam>
+    /// <param name="method">The method's name.</param>
+    /// <returns>An object that represents a method of the class, use the Invoke method to call it.</returns>
     public static MethodInfo PrivateMethod<T>(string method) => typeof(T).GetMethod(method, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
+    /// <summary>
+    /// Retrieves a method from <paramref name="T"/> that is not public.
+    /// </summary>
+    /// <param name="T">The class of interest.</param>
+    /// <param name="method">The method's name.</param>
+    /// <returns>An object that represents a method of the class, use the Invoke method to call it.</returns>
     public static MethodInfo PrivateMethod(Type T, string method) => T.GetMethod(method, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
+    /// <summary>
+    /// Retrieves a field from <typeparamref name="T"/> that is not public
+    /// </summary>
+    /// <typeparam name="T">The class of interest.</typeparam>
+    /// <param name="field">The field's name</param>
+    /// <returns>An object that represent a field, use GetField or SetField to... get and set it.</returns>
     public static FieldInfo PrivateField<T>(string field) => typeof(T).GetField(field, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
+    /// <summary>
+    /// Retrieves a field from <paramref name="T"/> that is not public
+    /// </summary>
+    /// <param name="T">The class of interest.</typeparam>
+    /// <param name="field">The field's name</param>
+    /// <returns>An object that represent a field, use GetField or SetField to... get and set it.</returns>
     public static FieldInfo PrivateField(Type T, string field) => T.GetField(field, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-    // Borrowed from Reductive Metallurgy
+    /// <summary>
+    /// Determines if a mod is loaded, useful for optional dependencies.
+    /// Borrowed from Reductive Metallurgy.
+    /// </summary>
+    /// <param name="modName">The name field in the mod's quintessential.yaml file.</param>
+    /// <returns>True if the mod with said name is loaded, and false otherwise.</returns>
     public static bool IsModLoaded(string modName) => QuintessentialLoader.Mods.Any(mod => mod.Name == modName);
 
-    /* Simulation Utils */
+    #endregion
+    #region Simulation Utils
 
-    public static void AddAtom(Sim sim, AtomType atomType, Part part, HexIndex hex)
+    /// <summary>
+    /// Spawns a new molecule consisting of a single atom.
+    /// See also: <see cref="AddSmallCollider(Sim, Part, HexIndex)"/>
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part that <paramref name="offset"/> is relative to.</param>
+    /// <param name="offset">The spawn position.</param>
+    /// <param name="atomType">The atom to spawn.</param>
+    public static void AddAtom(Sim sim, Part part, HexIndex offset, AtomType atomType)
     {
         Molecule molecule = new();
-        molecule.method_1105(new Atom(atomType), part.method_1184(hex));
+        molecule.method_1105(new Atom(atomType), part.method_1184(offset));
         sim.field_3823.Add(molecule);
     }
 
-    // Borrowed from TrueAn
-    public static void AddSmallCollider(Sim sim, Part part, HexIndex hex)
+    /// <summary>
+    /// Adds a bond in a molecule.
+    /// See also: <see cref="JoinMoleculesAtHexes(Sim, Part, HexIndex, HexIndex)"/>, <see cref="RemoveBondsRelative(Sim, Part, HexIndex, HexIndex, bool, bool)"/>
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to</param>
+    /// <param name="offset1">Where the bond's "left" end is.
+    /// Ensure that this is adjancent to <paramref name="offset2"/>, or an exception will be thrown.</param>
+    /// <param name="offset2">Where the bond's "right" end is.
+    /// Ensure that this is adjancent to <paramref name="offset1"/>, or an exception will be thrown.</param>
+    /// <param name="bt">The bond to create. If this is "None", behaves like <see cref="RemoveBondsRelative(Sim, Part, HexIndex, HexIndex, bool, bool)"/></param>
+    /// <param name="playAnimation">Whether or not to play the default animation.</param>
+    /// <param name="playSound">Whether or not to play the default sound.</param>
+    /// <returns>Failure: The hexes didn't have atoms, or if they were different molecules.
+    /// Idempotent: The bond already existed, or the existing bond can't coexist with the new one.
+    /// Success: The bond was successfully added.</returns>
+    public static SuccessInfo AddBond(Sim sim, Part part, HexIndex offset1, HexIndex offset2, BondType bt, bool playAnimation = true, bool playSound = true)
+    {
+        HexIndex h1 = part.method_1184(offset1);
+        HexIndex h2 = part.method_1184(offset2);
+        if (!sim.FindAtom(h1).method_99(out AtomReference atom1) || !sim.FindAtom(h2).method_99(out AtomReference atom2))
+        {
+            return SuccessInfo.failure;
+        }
+        if (bt == BondType.None)
+        {
+            return atom1.field_2277 == atom2.field_2277 ? API.RemoveBonds(sim, atom1.field_2277, h1, h2, playAnimation, playSound) : SuccessInfo.failure;
+        }
+        if (atom1.field_2277 != atom2.field_2277)
+        {
+            return SuccessInfo.failure;
+        }
+        class_200 btInfo = bt.method_779();
+        BondEffect bondEffect = new BondEffect(sim.field_3818, (enum_7)1, btInfo.field_1817, 60f, btInfo.field_1818);
+        if (atom1.field_2277.method_1112(btInfo.field_1814, h1, h2, bondEffect))
+        {
+            if (playAnimation)
+            {
+                Vector2 center = class_162.method_413(class_187.field_1742.method_492(h1), class_187.field_1742.method_492(h2), 0.5f);
+                sim.field_3818.field_3935.Add(new class_228(sim.field_3818, (enum_7)1, center, btInfo.field_1819, 30f, Vector2.Zero, class_187.field_1742.method_492(h2 - h1).Angle()));
+            }
+            if (playSound)
+            {
+                API.PlaySound(sim, btInfo.field_1820);
+            }
+            return SuccessInfo.success;
+        }
+        return SuccessInfo.idempotent;
+    }
+
+    /// <summary>
+    /// Spawns a small atom collider, to represent the top of a proxy emerging from an iris.
+    /// See also: <see cref="AddAtom(Sim, Part, AtomType, HexIndex)"/>
+    /// Borrowed from TrueAn.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part <paramref name="offset"/> is relative to.</param>
+    /// <param name="offset">The offset relative to the part's center.</param>
+    public static void AddSmallCollider(Sim sim, Part part, HexIndex offset)
     {
         sim.field_3826.Add(new()
         {
             field_3850 = (Sim.enum_190)0,
-            field_3851 = class_187.field_1742.method_492(part.method_1184(hex)),
+            field_3851 = class_187.field_1742.method_492(part.method_1184(offset)),
             field_3852 = 15f
         });
     }
 
+    /// <summary>
+    /// Transmutes an atom into another.
+    /// </summary>
+    /// <param name="atom">The atom to change.</param>
+    /// <param name="newType">What type it will turn into.</param>
     public static void ChangeAtom(AtomReference atom, AtomType newType) => atom.field_2277.method_1106(newType, atom.field_2278);
 
+    /// <summary>
+    /// finds the bond(s) present between two hexes.
+    /// </summary>
+    /// <param name="molecule">The molecule to query.</param>
+    /// <param name="h1">The position of the "left" side of a bond.</param>
+    /// <param name="h2">The position of the "right" side of a bond.</param>
+    /// <returns>The bond(s) that spans these two hexes in the given molecule.</returns>
+    public static BondType FindBondType(Molecule molecule, HexIndex h1, HexIndex h2) => molecule.method_1113(h1, h2);
+
+    /// <summary>
+    /// finds the bond(s) present between two hexes
+    /// </summary>
+    /// <param name="sim">The simulation object</param>
+    /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to</param>
+    /// <param name="offset1">The position of the "left" side of a bond</param>
+    /// <param name="offset2">The position of the "right" side of a bond</param>
+    /// <returns>The bond(s) that span these two hexes</returns>
+    public static BondType FindBondTypeRelative(Sim sim, Part part, HexIndex offset1, HexIndex offset2)
+    {
+        HexIndex h1 = part.method_1184(offset1);
+        HexIndex h2 = part.method_1184(offset2);
+        if (!API.FindMolecule(sim, h1).method_99(out Molecule molecule))
+        {
+            return BondType.None;
+        }
+        return API.FindBondType(molecule, h1, h2);
+    }
+
+    /// <summary>
+    /// Like <see cref="Sim.FindAtom(HexIndex)"/>, but finds molecules instead.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="hex">The position to search.</param>
+    /// <returns>A molecule with an atom present in the given location.</returns>
+    public static Maybe<Molecule> FindMolecule(Sim sim, HexIndex hex)
+    {
+        if (!sim.FindAtom(hex).method_99(out AtomReference atom))
+        {
+            return null;
+        }
+        return atom.field_2277;
+    }
+
+    /// <summary>
+    /// Like <see cref="Sim.FindAtomRelative(Part, HexIndex)"/>, but finds molecules instead.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part <paramref name="offset"/> is relative to.</param>
+    /// <param name="offset">The position to search.</param>
+    /// <returns>A molecule with an atom present in the given location.</returns>
+    public static Maybe<Molecule> FindMoleculeRelative(Sim sim, Part part, HexIndex offset)
+    {
+        return API.FindMolecule(sim, part.method_1184(offset));
+    }
+
+    /// <summary>
+    /// Tells the game to recalcute the given molecule's bond network, and separated the molecule if necessary.
+    /// </summary>
+    /// <param name="molecule">The molecule to divide.</param>
+    public static void ForceRecomputeBonds(Molecule molecule)
+    {
+        molecule.field_2638 = true;
+    }
+
+    /// <summary>
+    /// Determines if a hex on a grid axis, think of a rook from chess.
+    /// </summary>
+    /// <param name="hex">The hex to check, the difference of two hexes is also sensible here.</param>
+    /// <returns>Whether a hex is axially aligned.</returns>
+    public static bool IsHexAligned(HexIndex hex) => hex.Q == 0 || hex.R == 0 || hex.Q == -hex.R;
+
+    /// <summary>
+    /// Causes two separate molecules to become one, and move together as a group.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to.</param>
+    /// <param name="offset1">The position of an atom in one molecule.</param>
+    /// <param name="offset2">The position of an atom in a different molecule.</param>
+    /// <returns>Failure: A molecule wasn't present in one of the locations.
+    /// Idempotent: Both positions where occupied by the same molecule.
+    /// Success: The molecules at those two locations are now combined.</returns>
+    public static SuccessInfo JoinMoleculesAtHexes(Sim sim, Part part, HexIndex offset1, HexIndex offset2)
+    {
+        if (!API.FindMoleculeRelative(sim, part, offset1).method_99(out Molecule molecule1) || !API.FindMoleculeRelative(sim, part, offset2).method_99(out Molecule molecule2))
+        {
+            return SuccessInfo.failure;
+        }
+        return API.JoinMolecules(sim, molecule1, molecule2);
+    }
+
+    /// <summary>
+    /// Causes two separate molecules to become one, and move together as a group.
+    /// </summary>
+    /// <param name="sim">The simulation object</param>
+    /// <param name="molecule1">A molecule to be joined</param>
+    /// <param name="molecule2">A molecule to be joined</param>
+    /// <returns>Idempotent: If the two molecules are the same.
+    /// Success: The molecules are now combined.</returns>
+    public static SuccessInfo JoinMolecules(Sim sim, Molecule molecule1, Molecule molecule2)
+    {
+        if (molecule1 == molecule2)
+        {
+            return SuccessInfo.idempotent;
+        }
+        sim.field_3823.Remove(molecule1);
+        sim.field_3823.Remove(molecule2);
+        sim.field_3823.Add(molecule1.method_1119(molecule2));
+        return SuccessInfo.success;
+    }
+
+    /// <summary>
+    /// Play a loaded sound effect.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="sound">The sound to play.</param>
+    public static void PlaySound(Sim sim, Sound sound) => API.PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
+
+    /// <summary>
+    /// Remove an atom from the engine's surface.
+    /// </summary>
+    /// <param name="atom">The atom to remove.</param>
     public static void RemoveAtom(AtomReference atom) => atom.field_2277.method_1107(atom.field_2278);
 
-    public static void PlaySound(Sim sim, Sound sound) => API.PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
+    /// <summary>
+    /// Removes a bond in a molecule between two hexes.
+    /// This can create a "disjoint molecule", call <see cref="API.ForceRecomputeBonds(Molecule)"/> to tell the game to separate it.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="molecule">The molecule of interest.</param>
+    /// <param name="h1">The position of the "left" side of a bond.</param>
+    /// <param name="h2">The position of the "right" side of a bond.</param>
+    /// <param name="playAnimation">Whether to play the default animation.</param>
+    /// <param name="playSound">Whether to play the default sound.</param>
+    /// <returns>Idempotent: There was no bond present.
+    /// Success: A bond was removed.</returns>
+    public static SuccessInfo RemoveBonds(Sim sim, Molecule molecule, HexIndex h1, HexIndex h2, bool playAnimation = true, bool playSound = true)
+    {
+        List<class_277> moleculeBonds = (List<class_277>)API.PrivateField(molecule.GetType(), "field_2643").GetValue(molecule);
+        int count = (int)moleculeBonds.GetType().GetMethod("RemoveAll").Invoke(moleculeBonds, new object[] { bool (class_277 bond) => (bond.field_2187 == h1 && bond.field_2188 == h2) || (bond.field_2188 == h1 && bond.field_2187 == h2)});
+        if (count == 0)
+        {
+            return SuccessInfo.idempotent;
+        }
+        if (playAnimation)
+        {
+            BondType bt = API.FindBondType(molecule, h1, h2);
+            Vector2 center = class_162.method_413(class_187.field_1742.method_492(h1), class_187.field_1742.method_492(h2), 0.5f);
+            class_256[] debondAnimation = (((bt & enum_126.Standard) != enum_126.Standard) ? class_238.field_1989.field_83.field_156 : class_238.field_1989.field_83.field_154);
+            sim.field_3818.field_3935.Add(new class_228(sim.field_3818, (enum_7)1, center, debondAnimation, 75f, new Vector2(1.5f, -5f), class_187.field_1742.method_492(h2 - h1).Angle()));
+        }
+        if (playSound)
+        {
+            API.PlaySound(sim, class_238.field_1991.field_1849);
+        }
+        return SuccessInfo.success;
+
+    }
+
+    /// <summary>
+    /// Removes a bond in a molecule between two hexes.
+    /// This can create a "disjoint molecule", call <see cref="API.ForceRecomputeBonds(Molecule)"/> to tell the game to separate it.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to.</param>
+    /// <param name="offset1">The position of the "left" side of a bond.</param>
+    /// <param name="offset2">The position of the "right" side of a bond.</param>
+    /// <param name="playAnimation">Whether to play the default animation.</param>
+    /// <param name="playSound">Whether to play the default sound.</param>
+    /// <returns>Failure: One of the hexes didn't have an atom.
+    /// Idempotent: No bond was present to remove.
+    /// Success: A bond was removed.</returns>
+    public static SuccessInfo RemoveBondsRelative(Sim sim, Part part, HexIndex offset1, HexIndex offset2, bool playAnimation = true, bool playSound = true)
+    {
+        offset1 = part.method_1184(offset1);
+        offset2 = part.method_1184(offset2);
+        if (!sim.FindAtom(offset1).method_99(out AtomReference atom) || !sim.FindAtom(offset2).method_1085())
+        {
+            return SuccessInfo.failure;
+        }
+        return API.RemoveBonds(sim, atom.field_2277, offset1, offset2, playAnimation, playSound);
+    }
+
+    /// <summary>
+    /// Removes an atom from a molecule, and any bonds attached to it.
+    /// This can create a "disjoint molecule", call <see cref="API.ForceRecomputeBonds(Molecule)"/> to tell the game to separate it.
+    /// </summary>
+    /// <param name="molecule">The molecule to cut.</param>
+    /// <param name="hex">The position to remove.</param>
+    /// <returns>Whether an atom was present.</returns>
+    public static bool RemoveHexFromMolecule(Molecule molecule, HexIndex hex)
+    {
+        // *private and internal qualifier related anger noises*
+        Dictionary<HexIndex, Atom> moleculeAtoms = (Dictionary<HexIndex, Atom>)API.PrivateField(molecule.GetType(), "field_2642").GetValue(molecule);
+        if (!(bool)moleculeAtoms.GetType().GetMethod("Remove").Invoke(moleculeAtoms, new object[] { hex }))
+        {
+            return false;
+        }
+        List<class_277> moleculeBonds = (List<class_277>)API.PrivateField(molecule.GetType(), "field_2643").GetValue(molecule);
+        moleculeBonds.GetType().GetMethod("RemoveAll").Invoke(moleculeBonds, new object[] { bool (class_277 bond) => {
+            if (bond.field_2187 == hex)
+            {
+                return true;
+            }
+            return bond.field_2188 == hex;
+        }});
+        return true;
+    }
+
+    /// <summary>
+    /// Removes an atom from a molecule, and any bonds attached to it.
+    /// This can create a "disjoint molecule", call <see cref="API.ForceRecomputeBonds(Molecule)"/> to tell the game to separate it.
+    /// </summary>
+    /// <param name="sim">The simulation object</param>
+    /// <param name="part">The part <paramref name="offset"/> is relative to.</param>
+    /// <param name="offset">the atom to remove.</param>
+    /// <returns>Whether an atom was present.</returns>
+    public static bool RemoveHexFromMoleculeRelative(Sim sim, Part part, HexIndex offset)
+    {
+        HexIndex hex = part.method_1184(offset);
+        if (!API.FindMolecule(sim, hex).method_99(out Molecule molecule))
+        {
+            return false;
+        }
+        return API.RemoveHexFromMolecule(molecule, hex);
+    }
+    #endregion
 }
