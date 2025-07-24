@@ -213,7 +213,7 @@ public static class API
             }
             return Path.Combine(dir, "Content/");
         }
-        return null;
+        return struct_18.field_1431;
     }
 
     /// <summary>
@@ -230,7 +230,7 @@ public static class API
                 return mod;
             }
         }
-        return null;
+        return struct_18.field_1431;
     }
 
     /// <summary>
@@ -244,7 +244,7 @@ public static class API
         string soundPath = Path.Combine(contentDir, path + ".wav");
         if (!File.Exists(soundPath))
         {
-            return null;
+            return struct_18.field_1431;
         }
         Sound sound = new()
         {
@@ -436,7 +436,7 @@ public static class API
     {
         if (!sim.FindAtom(hex).method_99(out AtomReference atom))
         {
-            return null;
+            return struct_18.field_1431;
         }
         return atom.field_2277;
     }
