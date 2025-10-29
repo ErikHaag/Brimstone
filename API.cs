@@ -15,15 +15,21 @@ public static class API
     #region helper classes & enum
 
     /// <summary>
-    /// A three state enum, to communicate what happened
-    /// failure: command couldn't run to completion, due to invalid arguments, or conditions
-    /// idempotent: command could execute, but it didn't change anything
-    /// success: command fully executed, and caused a change.
+    /// A three state enum, to communicate what happened.
     /// </summary>
     public enum SuccessInfo
     {
+        /// <summary>
+        /// Command couldn't run to completion, due to invalid arguments, or conditions
+        /// </summary>
         failure = 0,
+        /// <summary>
+        /// Command could execute, but it didn't change anything
+        /// </summary>
         idempotent = 1,
+        /// <summary>
+        /// Command fully executed, and caused a change.
+        /// </summary>
         success = 2
     }
 
@@ -149,7 +155,7 @@ public static class API
     /// <param name="pathToShade">A file that leads to a texture of a proxy's shade
     /// The root is your mod's content folder, don't include the file extension.</param>
     /// <returns>An AtomType that can be passed to Quintessential.</returns>
-    public static AtomType CreateNormalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShadow = "texture/atoms/shadow", string pathToShade = "textures/atoms/salt_shade")
+    public static AtomType CreateNormalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShadow = "textures/atoms/shadow", string pathToShade = "textures/atoms/salt_shade")
     {
         AtomType atom = new()
         {
@@ -357,20 +363,20 @@ public static class API
         }
         class_200 btInfo = bt.method_779();
         BondEffect bondEffect = new BondEffect(sim.field_3818, (enum_7)1, btInfo.field_1817, 60f, btInfo.field_1818);
-        if (atom1.field_2277.method_1112(btInfo.field_1814, h1, h2, bondEffect))
+        if (!atom1.field_2277.method_1112(btInfo.field_1814, h1, h2, bondEffect))
         {
-            if (playAnimation)
-            {
-                Vector2 center = class_162.method_413(class_187.field_1742.method_492(h1), class_187.field_1742.method_492(h2), 0.5f);
-                sim.field_3818.field_3935.Add(new class_228(sim.field_3818, (enum_7)1, center, btInfo.field_1819, 30f, Vector2.Zero, class_187.field_1742.method_492(h2 - h1).Angle()));
-            }
-            if (playSound)
-            {
-                API.PlaySound(sim, btInfo.field_1820);
-            }
-            return SuccessInfo.success;
+            return SuccessInfo.idempotent;
         }
-        return SuccessInfo.idempotent;
+        if (playAnimation)
+        {
+            Vector2 center = class_162.method_413(class_187.field_1742.method_492(h1), class_187.field_1742.method_492(h2), 0.5f);
+            sim.field_3818.field_3935.Add(new class_228(sim.field_3818, (enum_7)1, center, btInfo.field_1819, 30f, Vector2.Zero, class_187.field_1742.method_492(h2 - h1).Angle()));
+        }
+        if (playSound)
+        {
+            API.PlaySound(sim, btInfo.field_1820);
+        }
+        return SuccessInfo.success;
     }
 
     /// <summary>
@@ -586,6 +592,7 @@ public static class API
     /// <summary>
     /// Removes an atom from a molecule, and any bonds attached to it.
     /// This can create a "disjoint molecule", call <see cref="API.ForceRecomputeBonds(Molecule)"/> to tell the game to separate it.
+    /// See also: <see cref="RemoveAtom(AtomReference)"/>
     /// </summary>
     /// <param name="molecule">The molecule to cut.</param>
     /// <param name="hex">The position to remove.</param>
