@@ -7,9 +7,14 @@ using System.Reflection;
 
 namespace Brimstone;
 
+using VanillaPermissions = enum_149;
 using BondType = enum_126;
+using PartType = class_139;
 using Texture = class_256;
 
+/// <summary>
+/// The API for Brimstone
+/// </summary>
 public static class API
 {
     #region helper classes & enum
@@ -37,25 +42,69 @@ public static class API
     #region AtomType utils
 
     /// <summary>
-    /// A dictionary of vanilla atoms, excluding the repeat atom.
-    /// Keys are their english names in lowercase.
+    /// A class of the vanilla atoms, excluding the repeat atom.
     /// </summary>
-    public static readonly Dictionary<string, AtomType> VanillaAtoms = new() {
-        { "salt", class_175.field_1675 },
-        { "air",  class_175.field_1676 },
-        { "fire", class_175.field_1678 },
-        { "quicksilver", class_175.field_1680 },
-        { "water", class_175.field_1679 },
-        { "earth", class_175.field_1677 },
-        { "lead", class_175.field_1681 },
-        { "tin", class_175.field_1683 },
-        { "iron", class_175.field_1684 },
-        { "copper", class_175.field_1682 },
-        { "silver", class_175.field_1685 },
-        { "gold", class_175.field_1686 },
-        { "vitae", class_175.field_1687 },
-        { "mors", class_175.field_1688 },
-        { "quintessence", class_175.field_1690 }
+    public static class VanillaAtoms {
+        /// <summary>
+        /// The salt atom type 🜔
+        /// </summary>
+        public static readonly AtomType salt = class_175.field_1675;
+        /// <summary>
+        /// The air atomtype 🜁
+        /// </summary>
+        public static readonly AtomType air =  class_175.field_1676;
+        /// <summary>
+        /// The earth atomtype 🜃
+        /// </summary>
+        public static readonly AtomType earth = class_175.field_1677;
+        /// <summary>
+        /// The fire atomtype 🜂
+        /// </summary>
+        public static readonly AtomType fire = class_175.field_1678;
+        /// <summary>
+        /// The water atomtype 🜄
+        /// </summary>
+        public static readonly AtomType water = class_175.field_1679;
+        /// <summary>
+        /// The quicksilver atomtype ☿
+        /// </summary>
+        public static readonly AtomType quicksilver = class_175.field_1680;
+        /// <summary>
+        /// The lead atomtype ♄
+        /// </summary>
+        public static readonly AtomType lead = class_175.field_1681;
+        /// <summary>
+        /// The tin atomtype ♃
+        /// </summary>
+        public static readonly AtomType tin = class_175.field_1683;
+        /// <summary>
+        /// The iron atomtype ♂
+        /// </summary>
+        public static readonly AtomType iron = class_175.field_1684;
+        /// <summary>
+        /// The copper atomtype ♀
+        /// </summary>
+        public static readonly AtomType copper = class_175.field_1682;
+        /// <summary>
+        /// The silver atomtype ☽
+        /// </summary>
+        public static readonly AtomType silver = class_175.field_1685;
+        /// <summary>
+        /// The gold atomtype ☉
+        /// </summary>
+        public static readonly AtomType gold = class_175.field_1686;
+        /// <summary>
+        /// The vitae atom type 🜍
+        /// </summary>
+        public static readonly AtomType vitae = class_175.field_1687;
+        /// <summary>
+        /// The mors atomtype (no unicode character)
+        /// </summary>
+        public static readonly AtomType mors = class_175.field_1688;
+        /// <summary>
+        /// The quintessence atomtype 🜀
+        /// </summary>
+        public static readonly AtomType quintessence = class_175.field_1690;
     };
 
     /// <summary>
@@ -93,7 +142,7 @@ public static class API
                 field_10 = class_235.method_615(pathToRim)
             },
             field_2293 = true, // Cardinal
-            QuintAtomType = modName + ":" + name.ToLower(),
+            QuintAtomType = modName + ":" + name.ToLower().Replace(' ', '_'),
         };
         return atom;
     }
@@ -104,16 +153,35 @@ public static class API
     /// <param name="ID">A positive integer from 0 to 255, the values from 1 to 16 are already used by the game and shouldn't be used.
     /// Please consult other mods that add atoms to avoid ID collisions.</param>
     /// <param name="modName">The name of your mod.</param>
-    /// <param name="name">The name of the atom in uppercase</param>
-    /// <param name="pathToSymbol">A file that leads to a texture of a proxy's symbol.
+    /// <param name="name">The name of the atom in title case</param>
+    /// <param name="pathToSymbol">A file path that leads to a texture of a proxy's symbol.
     /// The root is your mod's content folder, don't include the file extension.</param>
-    /// <param name="pathToLightramp">A file that leads to a texture of a proxy's lightramp.
+    /// <param name="pathToLightramp">A file path that leads to a texture of a proxy's lightramp.
     /// The root is your mod's content folder, don't include the file extension.</param>
-    /// <param name="pathToShadow">A file that leads to a texture of a proxy's shadow or rimlight.
+    /// <param name="pathToShadow">A file path that leads to a texture of a proxy's shadow, defaults to a black shadow.
+    /// The root is your mod's content folder, don't include the file extension.</param>
+    /// <param name="pathToRimlight">A file path that leads to a texture of a proxy's rimlight, defaults to the specular highlight.
     /// The root is your mod's content folder, don't include the file extension.</param>
     /// <param name="promotesTo">The metal above it in the promotion chain, used by the glyph of projection and purification.</param>
     /// <returns>An AtomType that can be passed to Quintessential.</returns>
-    public static AtomType CreateMetalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, string pathToShadow = "textures/atoms/shadow", AtomType promotesTo = null)
+    public static AtomType CreateMetalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToLightramp, string pathToShadow = "", string pathToRimlight = "", AtomType promotesTo = null)
+    {
+        return CreateMetalAtom(ID, modName, name, GetTexture(pathToSymbol), GetTexture(pathToLightramp), pathToShadow == "" ? class_238.field_1989.field_81.field_599 : GetTexture(pathToShadow), pathToRimlight == "" ? class_238.field_1989.field_81.field_613.field_634 : GetTexture(pathToRimlight), promotesTo);
+    }
+
+    /// <summary>
+    /// Creates a metal atom, that has the option to be promoted, I recommend you to use named parameters with this function.
+    /// </summary>
+    /// <param name="ID"></param>
+    /// <param name="modName"></param>
+    /// <param name="name"></param>
+    /// <param name="symbol"></param>
+    /// <param name="lightramp"></param>
+    /// <param name="shadow"></param>
+    /// <param name="rimlight"></param>
+    /// <param name="promotesTo"></param>
+    /// <returns></returns>
+    public static AtomType CreateMetalAtom(byte ID, string modName, string name, Texture symbol, Texture lightramp, Texture shadow, Texture rimlight, AtomType promotesTo = null)
     {
         AtomType atom = new()
         {
@@ -121,16 +189,16 @@ public static class API
             field_2284 = class_134.method_254(name), // Non local name
             field_2285 = class_134.method_253("Elemental " + name, string.Empty), // Atomic name
             field_2286 = class_134.method_253(name, string.Empty), // Local name
-            field_2287 = class_235.method_615(pathToSymbol), // Symbol
-            field_2288 = class_235.method_615(pathToShadow), // Shadow
+            field_2287 = symbol, // Symbol
+            field_2288 = shadow, // Shadow
             field_2291 = new()
             {
                 field_13 = class_238.field_1989.field_81.field_577, // Diffuse
-                field_14 = class_235.method_615(pathToLightramp),
+                field_14 = lightramp,
                 field_15 = class_238.field_1989.field_81.field_613.field_634
             },
             field_2294 = true, // Metal
-            QuintAtomType = modName + ":" + name.ToLower()
+            QuintAtomType = modName + ":" + name.ToLower().Replace(' ', '_')
         };
         if (promotesTo is not null)
         {
@@ -174,6 +242,47 @@ public static class API
         };
         return atom;
     }
+
+    #endregion
+    #region PartType Utils
+    /// <summary>
+    /// Creates a new part type, pass it into various QApi methods to make it do more interesting thing other than take up space in the heap.
+    /// </summary>
+    /// <param name="ID">The part's ID</param>
+    /// <param name="name">The name displayed in the solution editor</param>
+    /// <param name="description">The description displayed in the solution editor</param>
+    /// <param name="cost">The amount of guilder the part costs</param>
+    /// <param name="glow">The glow texture, drawn under the glyph</param>
+    /// <param name="outline">The stroke texture, drawn above the glyph</param>
+    /// <param name="icon">The icon shown in the parts tray</param>
+    /// <param name="hoveredIcon">The icon shown in the parts tray when hovering with your mouse</param>
+    /// <param name="usedHexes">The area taken up by this glyph</param>
+    /// <param name="vanillaPerms">The vanilla permissions that need to active. (defaults to none)</param>
+    /// <param name="customPermission">The custom permission name that needs to be active. (defaults to none)</param>
+    /// <returns>The part with the following configuration</returns>
+    public static PartType CreateSimpleGlyph(String ID, String name, String description, int cost, Texture glow, Texture outline, Texture icon, Texture hoveredIcon, HexIndex[] usedHexes, VanillaPermissions vanillaPerms = VanillaPermissions.None, String customPermission = null)
+    {
+        PartType p = new()
+        {
+            field_1528 = ID,
+            field_1529 = class_134.method_253(name, string.Empty),
+            field_1530 = class_134.method_253(description, string.Empty),
+            field_1531 = cost,
+            field_1539 = true, // is it a glyph?
+            field_1540 = usedHexes,
+            field_1547 = icon,
+            field_1548 = hoveredIcon,
+            field_1549 = glow,
+            field_1550 = outline,
+            field_1551 = vanillaPerms,
+        };
+        if (customPermission is not null)
+        {
+            p.CustomPermissionCheck = perms => perms.Contains(customPermission);
+        }
+        return p;
+    }
+
 
     #endregion
     #region File Utils
@@ -298,7 +407,7 @@ public static class API
     /// <summary>
     /// Retrieves a field from <paramref name="T"/> that is not public
     /// </summary>
-    /// <param name="T">The class of interest.</typeparam>
+    /// <param name="T">The class of interest.</param>
     /// <param name="field">The field's name</param>
     /// <returns>An object that represent a field, use GetField or SetField to... get and set it.</returns>
     public static FieldInfo PrivateField(Type T, string field) => T.GetField(field, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);

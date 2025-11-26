@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net46</TargetFramework>
+		<TargetFramework>net452</TargetFramework>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -9,28 +9,38 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<OpusPath>C:\Program Files (x86)\Steam\steamapps\common\Opus Magnum</OpusPath>
+	</PropertyGroup>
+	
+	<PropertyGroup>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Reference Include="Lightning">
-			<HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Opus Magnum\ModdedLightning.exe</HintPath>
+			<HintPath>$(OpusPath)\ModdedLightning.exe</HintPath>
 		</Reference>
 		<Reference Include="MMHOOK_ModdedLightning">
-			<HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Opus Magnum\MMHOOK_ModdedLightning.dll</HintPath>
+			<HintPath>$(OpusPath)\MMHOOK_ModdedLightning.dll</HintPath>
 		</Reference>
 		<Reference Include="Mono.Cecil">
-			<HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Opus Magnum\Mono.Cecil.dll</HintPath>
+			<HintPath>$(OpusPath)\Mono.Cecil.dll</HintPath>
 		</Reference>
 		<Reference Include="MonoMod.RuntimeDetour">
-			<HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Opus Magnum\MonoMod.RuntimeDetour.dll</HintPath>
+			<HintPath>$(OpusPath)\MonoMod.RuntimeDetour.dll</HintPath>
 		</Reference>
 		<Reference Include="MonoMod.Utils">
-			<HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Opus Magnum\MonoMod.Utils.dll</HintPath>
+			<HintPath>$(OpusPath)\MonoMod.Utils.dll</HintPath>
 		</Reference>
 		<Reference Include="YamlDotNet">
-			<HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Opus Magnum\YamlDotNet.dll</HintPath>
+			<HintPath>$(OpusPath)\YamlDotNet.dll</HintPath>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="API.cs">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -56,9 +66,4 @@
 			<CopyLocal>False</CopyLocal>
 		</Reference>
 	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Content\" />
-	</ItemGroup>
-
 </Project>
