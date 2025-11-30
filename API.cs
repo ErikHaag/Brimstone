@@ -253,14 +253,14 @@ public static class API
     /// <param name="description">The description displayed in the solution editor</param>
     /// <param name="cost">The amount of guilder the part costs</param>
     /// <param name="glow">The glow texture, drawn under the glyph</param>
-    /// <param name="outline">The stroke texture, drawn above the glyph</param>
+    /// <param name="stroke">The stroke texture, drawn above the glyph</param>
     /// <param name="icon">The icon shown in the parts tray</param>
     /// <param name="hoveredIcon">The icon shown in the parts tray when hovering with your mouse</param>
     /// <param name="usedHexes">The area taken up by this glyph</param>
     /// <param name="vanillaPerms">The vanilla permissions that need to active. (defaults to none)</param>
     /// <param name="customPermission">The custom permission name that needs to be active. (defaults to none)</param>
     /// <returns>The part with the following configuration</returns>
-    public static PartType CreateSimpleGlyph(String ID, String name, String description, int cost, Texture glow, Texture outline, Texture icon, Texture hoveredIcon, HexIndex[] usedHexes, VanillaPermissions vanillaPerms = VanillaPermissions.None, String customPermission = null)
+    public static PartType CreateSimpleGlyph(String ID, String name, String description, int cost, Texture glow, Texture stroke, Texture icon, Texture hoveredIcon, HexIndex[] usedHexes, VanillaPermissions vanillaPerms = VanillaPermissions.None, String customPermission = null)
     {
         PartType p = new()
         {
@@ -273,7 +273,7 @@ public static class API
             field_1547 = icon,
             field_1548 = hoveredIcon,
             field_1549 = glow,
-            field_1550 = outline,
+            field_1550 = stroke,
             field_1551 = vanillaPerms,
         };
         if (customPermission is not null)
