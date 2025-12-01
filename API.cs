@@ -514,7 +514,22 @@ public static class API
     public static void ChangeAtom(AtomReference atom, AtomType newType) => atom.field_2277.method_1106(newType, atom.field_2278);
 
     /// <summary>
-    /// finds the bond(s) present between two hexes.
+    /// Draws an atom falling into a hole. 
+    /// </summary>
+    /// <param name="seb">The solution editor base to draw in to.</param>
+    /// <param name="hex">The hex the atom appears in</param>
+    /// <param name="type">The atom type</param>
+    public static void DrawFallingAtom(SolutionEditorBase seb, HexIndex hex, AtomType type) => seb.field_3937.Add(new(seb, hex, type));
+
+    /// <summary>
+    /// Draws an atom falling into a hole. 
+    /// </summary>
+    /// <param name="seb">The solution editor base</param>
+    /// <param name="atom">The atom to assume falling (will not be removed)</param>
+    public static void DrawFallingAtom(SolutionEditorBase seb, AtomReference atom) => DrawFallingAtom(seb, atom.field_2278, atom.field_2280);
+
+    /// <summary>
+    /// Finds the bond(s) present between two hexes.
     /// </summary>
     /// <param name="molecule">The molecule to query.</param>
     /// <param name="h1">The position of the "left" side of a bond.</param>
@@ -523,7 +538,7 @@ public static class API
     public static BondType FindBondType(Molecule molecule, HexIndex h1, HexIndex h2) => molecule.method_1113(h1, h2);
 
     /// <summary>
-    /// finds the bond(s) present between two hexes
+    /// Finds the bond(s) present between two hexes
     /// </summary>
     /// <param name="sim">The simulation object</param>
     /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to</param>
