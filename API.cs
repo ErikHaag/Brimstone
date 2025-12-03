@@ -7,10 +7,10 @@ using System.Reflection;
 
 namespace Brimstone;
 
-using VanillaPermissions = enum_149;
 using BondType = enum_126;
 using PartType = class_139;
 using Texture = class_256;
+using VanillaPermissions = enum_149;
 
 /// <summary>
 /// The API for Brimstone
@@ -44,7 +44,8 @@ public static class API
     /// <summary>
     /// A class of the vanilla atoms, excluding the repeat atom.
     /// </summary>
-    public static class VanillaAtoms {
+    public static class VanillaAtoms
+    {
         /// <summary>
         /// The salt atom type 🜔
         /// </summary>
@@ -52,7 +53,7 @@ public static class API
         /// <summary>
         /// The air atomtype 🜁
         /// </summary>
-        public static readonly AtomType air =  class_175.field_1676;
+        public static readonly AtomType air = class_175.field_1676;
         /// <summary>
         /// The earth atomtype 🜃
         /// </summary>
@@ -156,7 +157,7 @@ public static class API
     /// <param name="name">The name of the atom in title case</param>
     /// <param name="pathToSymbol">A file path that leads to a texture of a proxy's symbol.
     /// The root is your mod's content folder, don't include the file extension.</param>
-    /// <param name="pathToLightramp">A file path that leads to a texture of a proxy's lightramp.
+    /// <param name="pathToLightramp">A file path that leads to a texture of a proxy's lightramp; which is a 256 x 8 gradient
     /// The root is your mod's content folder, don't include the file extension.</param>
     /// <param name="pathToShadow">A file path that leads to a texture of a proxy's shadow, defaults to a black shadow.
     /// The root is your mod's content folder, don't include the file extension.</param>
@@ -172,15 +173,16 @@ public static class API
     /// <summary>
     /// Creates a metal atom, that has the option to be promoted, I recommend you to use named parameters with this function.
     /// </summary>
-    /// <param name="ID"></param>
-    /// <param name="modName"></param>
-    /// <param name="name"></param>
-    /// <param name="symbol"></param>
-    /// <param name="lightramp"></param>
-    /// <param name="shadow"></param>
-    /// <param name="rimlight"></param>
-    /// <param name="promotesTo"></param>
-    /// <returns></returns>
+    /// <param name="ID">A positive integer from 0 to 255, the values from 1 to 16 are already used by the game and shouldn't be used.
+    /// Please consult other mods that add atoms to avoid ID collisions.</param>
+    /// <param name="modName">The name of your mod.</param>
+    /// <param name="name">The name of the atom in title case.</param>
+    /// <param name="symbol">The texture of a proxy's symbol.</param>
+    /// <param name="lightramp">The texture of a proxy's lightramp; which is a 256 x 8 gradient.</param>
+    /// <param name="shadow">The texture of a proxy's shadow.</param>
+    /// <param name="rimlight">The texture of a proxy's rimlight; which rotates towards the engine's lamp.</param>
+    /// <param name="promotesTo">The metal above it in the promotion chain, used by the glyph of projection and purification.</param>
+    /// <returns>An AtomType that can be passed to Quintessential.</returns>
     public static AtomType CreateMetalAtom(byte ID, string modName, string name, Texture symbol, Texture lightramp, Texture shadow, Texture rimlight, AtomType promotesTo = null)
     {
         AtomType atom = new()
@@ -195,7 +197,7 @@ public static class API
             {
                 field_13 = class_238.field_1989.field_81.field_577, // Diffuse
                 field_14 = lightramp,
-                field_15 = class_238.field_1989.field_81.field_613.field_634
+                field_15 = rimlight
             },
             field_2294 = true, // Metal
             QuintAtomType = modName + ":" + name.ToLower().Replace(' ', '_')
@@ -214,16 +216,33 @@ public static class API
     /// Please consult other mods that add atoms to avoid ID collisions.</param>
     /// <param name="modName">The name of your mod.</param>
     /// <param name="name">The name of the atom in uppercase.</param>
-    /// <param name="pathToSymbol">A file that leads to a texture of a proxy's symbol.
+    /// <param name="pathToSymbol">A file path that leads to a texture of a proxy's symbol.
     /// The root is your mod's content folder, don't include the file extension.</param>
-    /// <param name="pathToDiffuse">A file that leads to a texture of a proxy' surface.
+    /// <param name="pathToDiffuse">A file path that leads to a texture of a proxy' surface.
     /// The root is your mod's content folder, don't include the file extension.</param>
-    /// <param name="pathToShadow">A file that leads to a texture of a proxy's shadow.
+    /// <param name="pathToShadow">A file path that leads to a texture of a proxy's shadow.
     /// The root is your mod's content folder, don't include the file extension.</param>
-    /// <param name="pathToShade">A file that leads to a texture of a proxy's shade
+    /// <param name="pathToShade">A file path that leads to a texture of a proxy's shade.
     /// The root is your mod's content folder, don't include the file extension.</param>
     /// <returns>An AtomType that can be passed to Quintessential.</returns>
-    public static AtomType CreateNormalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShadow = "textures/atoms/shadow", string pathToShade = "textures/atoms/salt_shade")
+    public static AtomType CreateNormalAtom(byte ID, string modName, string name, string pathToSymbol, string pathToDiffuse, string pathToShadow = "", string pathToShade = "")
+    {
+        return CreateNormalAtom(ID, modName, name, GetTexture(pathToSymbol), GetTexture(pathToDiffuse), pathToShadow == "" ? class_238.field_1989.field_81.field_599 : GetTexture(pathToShadow), pathToShade == "" ? class_238.field_1989.field_81.field_597 : GetTexture(pathToShade));
+    }
+
+    /// <summary>
+    /// Creates a normal atom, I recommend you to use named parameters with this function.
+    /// </summary>
+    /// <param name="ID">A positive integer from 0 to 255, the values from 1 to 16 are already used by the game and shouldn't be used.
+    /// Please consult other mods that add atoms to avoid ID collisions.</param>
+    /// <param name="modName">The name of your mod.</param>
+    /// <param name="name">The name of the atom in title case.</param>
+    /// <param name="symbol">The texture of a proxy's symbol.</param>
+    /// <param name="diffuse">The texture of a proxy' surface.</param>
+    /// <param name="shadow">The texture of a proxy's shadow.</param>
+    /// <param name="shade">The texture of a proxy's shade.</param>
+    /// <returns>An AtomType that can be passed to Quintessential.</returns>
+    public static AtomType CreateNormalAtom(byte ID, string modName, string name, Texture symbol, Texture diffuse, Texture shadow, Texture shade)
     {
         AtomType atom = new()
         {
@@ -231,12 +250,12 @@ public static class API
             field_2284 = class_134.method_254(name), // Non local name
             field_2285 = class_134.method_253("Elemental " + name, String.Empty), // Atomic name
             field_2286 = class_134.method_253(name, String.Empty), // Local name
-            field_2287 = class_235.method_615(pathToSymbol),
-            field_2288 = class_235.method_615(pathToShadow),
+            field_2287 = symbol,
+            field_2288 = shadow,
             field_2290 = new()
             {
-                field_994 = class_235.method_615(pathToDiffuse),
-                field_995 = class_235.method_615(pathToShade),
+                field_994 = diffuse,
+                field_995 = shade,
             },
             QuintAtomType = modName + ":" + name.ToLower()
         };
@@ -246,12 +265,12 @@ public static class API
     #endregion
     #region PartType Utils
     /// <summary>
-    /// Creates a new part type, pass it into various QApi methods to make it do more interesting thing other than take up space in the heap.
+    /// Creates a new part type, pass it into various QApi methods to make it do more interesting thing other than take up space in the heap, I recommend you to use named parameters with this function.
     /// </summary>
     /// <param name="ID">The part's ID</param>
     /// <param name="name">The name displayed in the solution editor</param>
     /// <param name="description">The description displayed in the solution editor</param>
-    /// <param name="cost">The amount of guilder the part costs</param>
+    /// <param name="cost">The amount of guilder the part costs (usually a multiple of 5)</param>
     /// <param name="glow">The glow texture, drawn under the glyph</param>
     /// <param name="stroke">The stroke texture, drawn above the glyph</param>
     /// <param name="icon">The icon shown in the parts tray</param>
