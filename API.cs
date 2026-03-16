@@ -327,25 +327,16 @@ public static class API
     }
 
     /// <summary>
-    /// searches the mods directory for a folder whose name; excluding the version suffix, matches the argument, and gives the path to the content directory.
+    /// searches the loaded mods for one whose name matches the argument, and gives the path to the content directory.
     /// </summary>
-    /// <param name="modName">The name of folder that contains a quintessential.yaml file, the last section of digits, periods, and underscores in the folder name is ignored.</param>
+    /// <param name="modName">The name of mod, as given in its' quintessential.yaml file</param>
     /// <returns>An absolute path to the requested mod's content folder.</returns>
     public static Maybe<string> GetContentPath(string modName)
     {
-        foreach (string dir in QuintessentialLoader.ModContentDirectories)
+        IEnumerable<ModMeta> mods = QuintessentialLoader.Mods.Where((m) => m.Name == modName);
+        if (mods.Any())
         {
-            int lastCharIndex = dir.Length - 1;
-            // Assumes you don't use letters in version string
-            while ("_1234567890.".Contains(dir[lastCharIndex]))
-            {
-                lastCharIndex--;
-            }
-            if (!dir.Substring(0, lastCharIndex + 1).EndsWith(modName))
-            {
-                continue;
-            }
-            return Path.Combine(dir, "Content/");
+            return Path.Combine(mods.First().PathDirectory, "Content/");
         }
         return struct_18.field_1431;
     }
