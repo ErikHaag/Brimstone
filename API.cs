@@ -321,10 +321,21 @@ public static class API
         Texture[] anim = new Texture[frameCount];
         for (int i = 0; i < frameCount; i++)
         {
-            anim[i] = API.GetTexture(Path.Combine(containingFolder, frameBaseName) + "_" + (i + 1).ToString().PadLeft(padding, '0'));
+            anim[i] = GetTexture(Path.Combine(containingFolder, frameBaseName) + "_" + (i + 1).ToString().PadLeft(padding, '0'));
         }
         return anim;
     }
+
+    /// <summary>
+    /// Packages a set of lighting textures to be accurately lit by the engine's lamp.<br/>
+    /// See also: <seealso cref="class_195.method_527(class_126, HexIndex, Vector2, Vector2, float)"/>
+    /// </summary>
+    /// <param name="containingFolder">The folder containing the lighting info, usually ending in .lighting</param>
+    /// <returns>A wrapper that represents a light map.</returns>
+    public static class_126 GetLighting(string containingFolder) => new(GetTexture(Path.Combine(containingFolder, "left")),
+                                                                        GetTexture(Path.Combine(containingFolder, "right")),
+                                                                        GetTexture(Path.Combine(containingFolder, "bottom")),
+                                                                        GetTexture(Path.Combine(containingFolder, "top")));
 
     /// <summary>
     /// searches the loaded mods for one whose name matches the argument, and gives the path to the content directory.
@@ -434,7 +445,7 @@ public static class API
     #region Simulation Utils
 
     /// <summary>
-    /// Spawns a new molecule consisting of a single atom.
+    /// Spawns a new molecule consisting of a single atom.<br />
     /// See also: <see cref="AddSmallCollider(Sim, Part, HexIndex)"/>
     /// </summary>
     /// <param name="sim">The simulation object.</param>
@@ -449,7 +460,7 @@ public static class API
     }
 
     /// <summary>
-    /// Adds a bond in a molecule.
+    /// Adds a bond in a molecule.<br />
     /// See also: <see cref="JoinMoleculesAtHexes(Sim, Part, HexIndex, HexIndex)"/>, <see cref="RemoveBondsRelative(Sim, Part, HexIndex, HexIndex, bool, bool)"/>
     /// </summary>
     /// <param name="sim">The simulation object.</param>
@@ -499,7 +510,7 @@ public static class API
     }
 
     /// <summary>
-    /// Spawns a small atom collider, to represent the top of a proxy emerging from an iris.
+    /// Spawns a small atom collider, to represent the top of a proxy emerging from an iris.<br />
     /// See also: <see cref="AddAtom(Sim, Part, HexIndex, AtomType)"/>
     /// Borrowed from TrueAn.
     /// </summary>
@@ -700,7 +711,7 @@ public static class API
     }
 
     /// <summary>
-    /// Removes a bond in a molecule between two hexes.
+    /// Removes a bond in a molecule between two hexes.<br />
     /// This can create a "disjoint molecule", call <see cref="API.ForceRecomputeBonds(Molecule)"/> to tell the game to separate it.
     /// </summary>
     /// <param name="sim">The simulation object.</param>
@@ -733,7 +744,7 @@ public static class API
     /// <returns>Whether an atom was present.</returns>
     public static bool RemoveHexFromMolecule(Molecule molecule, HexIndex hex)
     {
-        // *private and internal qualifier related anger noises*
+        // *Zprivate and internal qualifier related anger noises*
         Dictionary<HexIndex, Atom> moleculeAtoms = (Dictionary<HexIndex, Atom>)API.PrivateField(molecule.GetType(), "field_2642").GetValue(molecule);
         if (!(bool)moleculeAtoms.GetType().GetMethod("Remove").Invoke(moleculeAtoms, new object[] { hex }))
         {

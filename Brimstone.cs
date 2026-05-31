@@ -12,7 +12,7 @@ internal class Brimstone : QuintessentialMod
 
     public override void PostLoad()
     {
-
+        
     }
 
     public override void LoadPuzzleContent()
