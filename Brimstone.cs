@@ -4,7 +4,7 @@ namespace Brimstone;
 
 internal class Brimstone : QuintessentialMod
 {
-    
+
     override public void Load()
     {
         Quintessential.Logger.Log("Brimstone: Loaded!");
@@ -12,7 +12,7 @@ internal class Brimstone : QuintessentialMod
 
     public override void PostLoad()
     {
-        
+
     }
 
     public override void LoadPuzzleContent()

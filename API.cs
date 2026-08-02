@@ -8,6 +8,7 @@ using System.Reflection;
 namespace Brimstone;
 
 using BondType = enum_126;
+using PartRenderer = class_195;
 using PartType = class_139;
 using Texture = class_256;
 using VanillaPermissions = enum_149;
@@ -345,11 +346,7 @@ public static class API
     public static Maybe<string> GetContentPath(string modName)
     {
         IEnumerable<ModMeta> mods = QuintessentialLoader.Mods.Where((m) => m.Name == modName);
-        if (mods.Any())
-        {
-            return Path.Combine(mods.First().PathDirectory, "Content/");
-        }
-        return struct_18.field_1431;
+        return mods.Any() ? (Maybe<string>)Path.Combine(mods.First().PathDirectory, "Content/") : (Maybe<string>)struct_18.field_1431;
     }
 
     /// <summary>
@@ -442,6 +439,97 @@ public static class API
     public static bool IsModLoaded(string modName) => QuintessentialLoader.Mods.Any(mod => mod.Name == modName);
 
     #endregion
+    #region Drawing Utils
+
+    /// <summary>
+    /// Converts a hex offset into a Vector2
+    /// </summary>
+    /// <param name="hex">The hex to convert</param>
+    /// <returns>The converted Vector</returns>
+    public static Vector2 HexIndexToVector2(HexIndex hex) => class_187.field_1742.method_492(hex);
+
+
+    /// <summary>
+    /// Todo: documentation<br />
+    /// Stol- I mean borrowed from Reductive Metallurgy, thanks Isaac!
+    /// </summary>
+    /// <param name="renderer"></param>
+    /// <param name="tex"></param>
+    /// <param name="graphicPivot"></param>
+    /// <param name="graphicAngle"></param>
+    /// <param name="graphicTranslation"></param>
+    /// <param name="screenTranslation"></param>
+    public static void DrawPartGraphic(PartRenderer renderer, Texture tex, Vector2 graphicPivot, float graphicAngle, Vector2 graphicTranslation, Vector2 screenTranslation) => DrawPartGraphicScaled(renderer, tex, graphicPivot, graphicAngle, graphicTranslation, screenTranslation, new Vector2(1f, 1f));
+
+
+    /// <summary>
+    /// Todo: documentation<br />
+    /// Stol- I mean borrowed from Reductive Metallurgy, thanks Isaac!
+    /// </summary>
+    /// <param name="renderer"></param>
+    /// <param name="tex"></param>
+    /// <param name="graphicPivot"></param>
+    /// <param name="graphicAngle"></param>
+    /// <param name="graphicTranslation"></param>
+    /// <param name="screenTranslation"></param>
+    /// <param name="scaling"></param>
+    /// <param name="tint">the color to tint the texture towards</param>
+    public static void DrawPartGraphicScaled(PartRenderer renderer, Texture tex, Vector2 graphicPivot, float graphicAngle, Vector2 graphicTranslation, Vector2 screenTranslation, Vector2 scaling, Color tint)
+    {
+        //for graphicPivot and graphicTranslation, rightwards is the positive-x direction and upwards is the positive-y direction
+        //graphicPivot is an absolute position, with (0,0) denoting the bottom-left corner of the texture
+        //graphicTranslation is a translation, so (5,-3) means "translate 5 pixels right and 3 pixels down"
+        //graphicAngle is measured in radians, and counterclockwise is the positive-angle direction
+        //screenTranslation is the final translation applied, so it is not affected by rotations
+        Matrix4 matrixScreenPosition = Matrix4.method_1070(renderer.field_1797.ToVector3(0f));
+        Matrix4 matrixTranslateOnScreen = Matrix4.method_1070(screenTranslation.ToVector3(0f));
+        Matrix4 matrixRotatePart = Matrix4.method_1073(renderer.field_1798);
+        Matrix4 matrixTranslateGraphic = Matrix4.method_1070(graphicTranslation.ToVector3(0f));
+        Matrix4 matrixRotateGraphic = Matrix4.method_1073(graphicAngle);
+        Matrix4 matrixPivotOffset = Matrix4.method_1070(-graphicPivot.ToVector3(0f));
+        Matrix4 matrixScaling = Matrix4.method_1074(scaling.ToVector3(0f));
+        Matrix4 matrixTextureSize = Matrix4.method_1074(tex.field_2056.ToVector3(0f));
+
+        Matrix4 matrix4 = matrixScreenPosition * matrixTranslateOnScreen * matrixRotatePart * matrixTranslateGraphic * matrixRotateGraphic * matrixPivotOffset * matrixScaling * matrixTextureSize;
+        class_135.method_262(tex, tint, matrix4);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="renderer"></param>
+    /// <param name="tex"></param>
+    /// <param name="graphicPivot"></param>
+    /// <param name="graphicAngle"></param>
+    /// <param name="graphicTranslation"></param>
+    /// <param name="screenTranslation"></param>
+    /// <param name="scaling"></param>
+    public static void DrawPartGraphicScaled(PartRenderer renderer, Texture tex, Vector2 graphicPivot, float graphicAngle, Vector2 graphicTranslation, Vector2 screenTranslation, Vector2 scaling) => DrawPartGraphicScaled(renderer, tex, graphicPivot, graphicAngle, graphicTranslation, screenTranslation, scaling, Color.White);
+
+    /// <summary>
+    /// Draws a texture using mask, mainly used by gloss.<br />
+    /// Stol- I mean borrowed from Reductive Metallurgy, thanks Isaac!
+    /// </summary>
+    /// <param name="renderer">the part context renderer, this is the first parameter of the Quintessental PartRender delegate.</param>
+    /// <param name="gloss">The base texture to draw</param>
+    /// <param name="mask">The mask to occult the gloss texture, only the alpha channel is used</param>
+    /// <param name="offset"></param>
+    /// <param name="hex"></param>
+    /// <param name="angle"></param>
+    public static void DrawGloss(PartRenderer renderer, Texture gloss, Texture mask, Vector2 offset, HexIndex hex, float angle)
+    {
+        class_135.method_257().field_1692 = class_238.field_1995.field_1757;
+        class_135.method_257().field_1693[1] = gloss;
+        // this is yoinked from the game, no clue why it does this.
+        class_135.method_257().field_1695 = 0.0001f * (renderer.field_1797 + HexIndexToVector2(new HexIndex(0, 0)).Rotated(renderer.field_1798) - (0.5f * class_115.field_1433));
+        DrawPartGraphic(renderer, mask, offset, angle, HexIndexToVector2(hex), Vector2.Zero);
+        // reset
+        class_135.method_257().field_1692 = class_135.method_257().field_1696;
+        class_135.method_257().field_1693[1] = class_238.field_1989.field_71;
+        class_135.method_257().field_1695 = Vector2.Zero;
+    }
+
+    #endregion
     #region Simulation Utils
 
     /// <summary>
@@ -460,8 +548,11 @@ public static class API
     }
 
     /// <summary>
-    /// Adds a bond in a molecule.<br />
-    /// See also: <see cref="JoinMoleculesAtHexes(Sim, Part, HexIndex, HexIndex)"/>, <see cref="RemoveBondsRelative(Sim, Part, HexIndex, HexIndex, bool, bool)"/>
+    /// Adds a bond in a molecule given 2 offsets.<br />
+    /// See also:
+    /// <see cref="AddBond(Sim, Molecule, HexIndex, HexIndex, BondType, bool, bool)"/>
+    /// <see cref="JoinMoleculesAtHexes(Sim, Part, HexIndex, HexIndex)"/>,
+    /// <see cref="RemoveBondsRelative(Sim, Part, HexIndex, HexIndex, bool, bool)"/>
     /// </summary>
     /// <param name="sim">The simulation object.</param>
     /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to</param>
@@ -483,17 +574,26 @@ public static class API
         {
             return SuccessInfo.failure;
         }
-        if (bt == BondType.None)
-        {
-            return atom1.field_2277 == atom2.field_2277 ? API.RemoveBonds(sim, atom1.field_2277, h1, h2, playAnimation, playSound) : SuccessInfo.failure;
-        }
-        if (atom1.field_2277 != atom2.field_2277)
-        {
-            return SuccessInfo.failure;
-        }
+        Molecule subject = atom1.field_2277;
+        return subject == atom2.field_2277 ? bt == BondType.None ? RemoveBonds(sim, subject, h1, h2, playAnimation, playSound) : AddBond(sim, subject, h1, h2, bt, playAnimation, playSound) : SuccessInfo.failure;
+    }
+
+    /// <summary>
+    /// Adds a bond to a molecule givenn the molecule and absolute positons.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="subject">The molecule which this bond will be applied</param>
+    /// <param name="h1"></param>
+    /// <param name="h2"></param>
+    /// <param name="bt"></param>
+    /// <param name="playAnimation"></param>
+    /// <param name="playSound"></param>
+    /// <returns></returns>
+    public static SuccessInfo AddBond(Sim sim, Molecule subject, HexIndex h1, HexIndex h2, BondType bt, bool playAnimation = true, bool playSound = true)
+    {
         class_200 btInfo = bt.method_779();
-        BondEffect bondEffect = new BondEffect(sim.field_3818, (enum_7)1, btInfo.field_1817, 60f, btInfo.field_1818);
-        if (!atom1.field_2277.method_1112(btInfo.field_1814, h1, h2, bondEffect))
+        BondEffect bondEffect = new(sim.field_3818, (enum_7)1, btInfo.field_1817, 60f, btInfo.field_1818);
+        if (!subject.method_1112(btInfo.field_1814, h1, h2, bondEffect))
         {
             return SuccessInfo.idempotent;
         }
@@ -504,7 +604,7 @@ public static class API
         }
         if (playSound)
         {
-            API.PlaySound(sim, btInfo.field_1820);
+            PlaySound(sim, btInfo.field_1820);
         }
         return SuccessInfo.success;
     }
@@ -517,15 +617,12 @@ public static class API
     /// <param name="sim">The simulation object.</param>
     /// <param name="part">The part <paramref name="offset"/> is relative to.</param>
     /// <param name="offset">The offset relative to the part's center.</param>
-    public static void AddSmallCollider(Sim sim, Part part, HexIndex offset)
+    public static void AddSmallCollider(Sim sim, Part part, HexIndex offset) => sim.field_3826.Add(new()
     {
-        sim.field_3826.Add(new()
-        {
-            field_3850 = (Sim.enum_190)0,
-            field_3851 = class_187.field_1742.method_492(part.method_1184(offset)),
-            field_3852 = 15f
-        });
-    }
+        field_3850 = (Sim.enum_190)0,
+        field_3851 = class_187.field_1742.method_492(part.method_1184(offset)),
+        field_3852 = 15f
+    });
 
     /// <summary>
     /// Transmutes an atom into another.
@@ -570,11 +667,7 @@ public static class API
     {
         HexIndex h1 = part.method_1184(offset1);
         HexIndex h2 = part.method_1184(offset2);
-        if (!API.FindMolecule(sim, h1).method_99(out Molecule molecule))
-        {
-            return BondType.None;
-        }
-        return API.FindBondType(molecule, h1, h2);
+        return !API.FindMolecule(sim, h1).method_99(out Molecule molecule) ? BondType.None : API.FindBondType(molecule, h1, h2);
     }
 
     /// <summary>
@@ -585,11 +678,7 @@ public static class API
     /// <returns>A molecule with an atom present in the given location.</returns>
     public static Maybe<Molecule> FindMolecule(Sim sim, HexIndex hex)
     {
-        if (!sim.FindAtom(hex).method_99(out AtomReference atom))
-        {
-            return struct_18.field_1431;
-        }
-        return atom.field_2277;
+        return !sim.FindAtom(hex).method_99(out AtomReference atom) ? (Maybe<Molecule>)struct_18.field_1431 : (Maybe<Molecule>)atom.field_2277;
     }
 
     /// <summary>
@@ -622,6 +711,7 @@ public static class API
 
     /// <summary>
     /// Causes two separate molecules to become one, and move together as a group.
+    /// This method is obsolete, please use <see cref="JoinMoleculesAtHexes(Sim, Part, HexIndex, HexIndex, out Maybe{Molecule})"/>
     /// </summary>
     /// <param name="sim">The simulation object.</param>
     /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to.</param>
@@ -630,14 +720,46 @@ public static class API
     /// <returns>Failure: A molecule wasn't present in one of the locations.
     /// Idempotent: Both positions where occupied by the same molecule.
     /// Success: The molecules at those two locations are now combined.</returns>
-    public static SuccessInfo JoinMoleculesAtHexes(Sim sim, Part part, HexIndex offset1, HexIndex offset2)
+    [Obsolete("The molecules referenced are removed from the board, then a new combined molecule is spawned in, any molecule edits after joining should happen to the new molecule.")]
+    public static SuccessInfo JoinMoleculesAtHexes(Sim sim, Part part, HexIndex offset1, HexIndex offset2) => JoinMoleculesAtHexes(sim, part, offset1, offset2, out Maybe<Molecule> _);
+
+    /// <summary>
+    /// Causes two separate molecules to become one, and move together as a group.
+    /// </summary>
+    /// <param name="sim">The simulation object.</param>
+    /// <param name="part">The part <paramref name="offset1"/> and <paramref name="offset2"/> are relative to.</param>
+    /// <param name="offset1">The position of an atom in one molecule.</param>
+    /// <param name="offset2">The position of an atom in a different molecule.</param>
+    /// <param name="joined">The joined molecule</param>
+    /// <returns>Failure: A molecule wasn't present in one of the locations.
+    /// Idempotent: Both positions where occupied by the same molecule.
+    /// Success: The molecules at those two locations are now combined.</returns>
+    public static SuccessInfo JoinMoleculesAtHexes(Sim sim, Part part, HexIndex offset1, HexIndex offset2, out Maybe<Molecule> joined)
     {
-        if (!API.FindMoleculeRelative(sim, part, offset1).method_99(out Molecule molecule1) || !API.FindMoleculeRelative(sim, part, offset2).method_99(out Molecule molecule2))
+        joined = struct_18.field_1431;
+        if (!FindMoleculeRelative(sim, part, offset1).method_99(out Molecule molecule1) || !FindMoleculeRelative(sim, part, offset2).method_99(out Molecule molecule2))
         {
             return SuccessInfo.failure;
         }
-        return API.JoinMolecules(sim, molecule1, molecule2);
+        else
+        {
+            SuccessInfo r = JoinMolecules(sim, molecule1, molecule2, out Molecule joinedO);
+            joined = joinedO;
+            return r;
+        }
     }
+
+    /// <summary>
+    /// Causes two separate molecules to become one, and move together as a group.<br/>
+    /// This method is obsolete, please use <see cref="JoinMolecules(Sim, Molecule, Molecule, out Molecule)"/>
+    /// </summary>
+    /// <param name="sim">The simulation object</param>
+    /// <param name="molecule1">A molecule to be joined</param>
+    /// <param name="molecule2">A molecule to be joined</param>
+    /// <returns>Idempotent: If the two molecules are the same.
+    /// Success: The molecules are now combined.</returns>
+    [Obsolete("The molecules referenced are removed from the board, then a new combined molecule is spawned in, any molecule edits after joining should happen to the new molecule.")]
+    public static SuccessInfo JoinMolecules(Sim sim, Molecule molecule1, Molecule molecule2) => JoinMolecules(sim, molecule1, molecule2, out Molecule _);
 
     /// <summary>
     /// Causes two separate molecules to become one, and move together as a group.
@@ -645,17 +767,20 @@ public static class API
     /// <param name="sim">The simulation object</param>
     /// <param name="molecule1">A molecule to be joined</param>
     /// <param name="molecule2">A molecule to be joined</param>
+    /// <param name="joined">The joined molecule</param>
     /// <returns>Idempotent: If the two molecules are the same.
     /// Success: The molecules are now combined.</returns>
-    public static SuccessInfo JoinMolecules(Sim sim, Molecule molecule1, Molecule molecule2)
+    public static SuccessInfo JoinMolecules(Sim sim, Molecule molecule1, Molecule molecule2, out Molecule joined)
     {
         if (molecule1 == molecule2)
         {
+            joined = molecule1;
             return SuccessInfo.idempotent;
         }
         sim.field_3823.Remove(molecule1);
         sim.field_3823.Remove(molecule2);
-        sim.field_3823.Add(molecule1.method_1119(molecule2));
+        joined = molecule1.method_1119(molecule2);
+        sim.field_3823.Add(joined);
         return SuccessInfo.success;
     }
 
@@ -664,7 +789,7 @@ public static class API
     /// </summary>
     /// <param name="sim">The simulation object.</param>
     /// <param name="sound">The sound to play.</param>
-    public static void PlaySound(Sim sim, Sound sound) => API.PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
+    public static void PlaySound(Sim sim, Sound sound) => PrivateMethod<Sim>("method_1856").Invoke(sim, new object[] { sound });
 
     /// <summary>
     /// Remove an atom from the engine's surface.
@@ -699,7 +824,7 @@ public static class API
         {
             BondType bt = API.FindBondType(molecule, h1, h2);
             Vector2 center = class_162.method_413(class_187.field_1742.method_492(h1), class_187.field_1742.method_492(h2), 0.5f);
-            class_256[] debondAnimation = (((bt & enum_126.Standard) != enum_126.Standard) ? class_238.field_1989.field_83.field_156 : class_238.field_1989.field_83.field_154);
+            class_256[] debondAnimation = ((bt & enum_126.Standard) != enum_126.Standard) ? class_238.field_1989.field_83.field_156 : class_238.field_1989.field_83.field_154;
             sim.field_3818.field_3935.Add(new class_228(sim.field_3818, (enum_7)1, center, debondAnimation, 75f, new Vector2(1.5f, -5f), class_187.field_1742.method_492(h2 - h1).Angle()));
         }
         if (playSound)
@@ -727,11 +852,9 @@ public static class API
     {
         offset1 = part.method_1184(offset1);
         offset2 = part.method_1184(offset2);
-        if (!sim.FindAtom(offset1).method_99(out AtomReference atom) || !sim.FindAtom(offset2).method_1085())
-        {
-            return SuccessInfo.failure;
-        }
-        return API.RemoveBonds(sim, atom.field_2277, offset1, offset2, playAnimation, playSound);
+        return !sim.FindAtom(offset1).method_99(out AtomReference atom) || !sim.FindAtom(offset2).method_1085()
+            ? SuccessInfo.failure
+            : API.RemoveBonds(sim, atom.field_2277, offset1, offset2, playAnimation, playSound);
     }
 
     /// <summary>
@@ -767,11 +890,7 @@ public static class API
     public static bool RemoveHexFromMoleculeRelative(Sim sim, Part part, HexIndex offset)
     {
         HexIndex hex = part.method_1184(offset);
-        if (!API.FindMolecule(sim, hex).method_99(out Molecule molecule))
-        {
-            return false;
-        }
-        return API.RemoveHexFromMolecule(molecule, hex);
+        return !API.FindMolecule(sim, hex).method_99(out Molecule molecule) ? false : API.RemoveHexFromMolecule(molecule, hex);
     }
     #endregion
 }
