@@ -772,9 +772,9 @@ public static class API
     /// Success: The molecules are now combined.</returns>
     public static SuccessInfo JoinMolecules(Sim sim, Molecule molecule1, Molecule molecule2, out Molecule joined)
     {
+        joined = molecule1;
         if (molecule1 == molecule2)
         {
-            joined = molecule1;
             return SuccessInfo.idempotent;
         }
         sim.field_3823.Remove(molecule1);

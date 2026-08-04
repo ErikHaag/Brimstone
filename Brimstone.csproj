@@ -2,9 +2,6 @@
 
 	<PropertyGroup>
 		<TargetFramework>net452</TargetFramework>
-	</PropertyGroup>
-
-	<PropertyGroup>
 		<LangVersion>10</LangVersion>
 	</PropertyGroup>
 
